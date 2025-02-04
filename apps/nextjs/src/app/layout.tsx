@@ -8,6 +8,8 @@ import { cn } from "@acme/ui/utils";
 
 import "~/app/globals.css";
 
+import { TRPCReactProvider } from "~/trpc/react";
+
 export const metadata: Metadata = {
   title: "Crypto Tracker",
   description: "Track your favorite cryptocurrencies",
@@ -41,7 +43,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <main className="flex min-h-screen flex-col">{props.children}</main>
+          <TRPCReactProvider>
+            <main className="flex min-h-screen flex-col">{props.children}</main>
+          </TRPCReactProvider>
           <Toaster />
         </ThemeProvider>
       </body>

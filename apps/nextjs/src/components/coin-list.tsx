@@ -1,44 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
 
 import { Skeleton } from "@acme/ui/skeleton";
 
-interface Coin {
-  id: string;
-  symbol: string;
-  name: string;
-  current_price: number;
-  price_change_percentage_24h: number;
-  image: string;
-}
+import { api } from "~/trpc/react";
 
 export function CoinList() {
-  const [coins, setCoins] = useState<Coin[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: coins,
+    isLoading,
+    isError,
+  } = api.coin.getTop100Coins.useQuery();
+  // useEffect(() => {
+  //   async function fetchCoins() {
+  //     try {
+  //       const response = await fetch(
+  //         "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false",
+  //       );
+  //       const data = (await response.json()) as Coin[];
+  //       setCoins(data);
+  //     } catch (error) {
+  //       console.error("Error fetching coins:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
 
-  useEffect(() => {
-    async function fetchCoins() {
-      try {
-        const response = await fetch(
-          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false",
-        );
-        const data = (await response.json()) as Coin[];
-        setCoins(data);
-      } catch (error) {
-        console.error("Error fetching coins:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+  //   void fetchCoins();
+  // }, []);
 
-    void fetchCoins();
-  }, []);
-
-  if (loading) {
+  if (isLoading || !coins) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 10 }).map((_, i) => (
@@ -61,6 +55,10 @@ export function CoinList() {
         ))}
       </div>
     );
+  }
+
+  if (isError) {
+    return <div>Error fetching coins</div>;
   }
 
   return (

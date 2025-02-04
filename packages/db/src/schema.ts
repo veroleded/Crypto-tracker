@@ -6,6 +6,7 @@ export const User = pgTable("user", (t) => ({
   name: t.varchar({ length: 255 }),
   email: t.varchar({ length: 255 }).notNull(),
   emailVerified: t.timestamp({ mode: "date", withTimezone: true }),
+  image: t.varchar({ length: 255 }),
 }));
 
 export const UserRelations = relations(User, ({ many }) => ({
