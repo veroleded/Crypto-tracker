@@ -1,33 +1,11 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-
-export const Post = pgTable("post", (t) => ({
-  id: t.uuid().notNull().primaryKey().defaultRandom(),
-  title: t.varchar({ length: 256 }).notNull(),
-  content: t.text().notNull(),
-  createdAt: t.timestamp().defaultNow().notNull(),
-  updatedAt: t
-    .timestamp({ mode: "date", withTimezone: true })
-    .$onUpdateFn(() => sql`now()`),
-}));
-
-export const CreatePostSchema = createInsertSchema(Post, {
-  title: z.string().max(256),
-  content: z.string().max(256),
-}).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
 export const User = pgTable("user", (t) => ({
   id: t.uuid().notNull().primaryKey().defaultRandom(),
   name: t.varchar({ length: 255 }),
   email: t.varchar({ length: 255 }).notNull(),
   emailVerified: t.timestamp({ mode: "date", withTimezone: true }),
-  image: t.varchar({ length: 255 }),
 }));
 
 export const UserRelations = relations(User, ({ many }) => ({
@@ -54,6 +32,8 @@ export const Account = pgTable(
     scope: t.varchar({ length: 255 }),
     id_token: t.text(),
     session_state: t.varchar({ length: 255 }),
+    createdAt: t.timestamp().defaultNow().notNull(),
+    updatedAt: t.timestamp().defaultNow().notNull(),
   }),
   (account) => ({
     compoundKey: primaryKey({
@@ -73,8 +53,25 @@ export const Session = pgTable("session", (t) => ({
     .notNull()
     .references(() => User.id, { onDelete: "cascade" }),
   expires: t.timestamp({ mode: "date", withTimezone: true }).notNull(),
+  createdAt: t.timestamp().defaultNow().notNull(),
+  updatedAt: t.timestamp().defaultNow().notNull(),
 }));
 
 export const SessionRelations = relations(Session, ({ one }) => ({
   user: one(User, { fields: [Session.userId], references: [User.id] }),
+}));
+
+export const Favorite = pgTable("favorite", (t) => ({
+  id: t.uuid().notNull().primaryKey().defaultRandom(),
+  userId: t
+    .uuid()
+    .notNull()
+    .references(() => User.id, { onDelete: "cascade" }),
+  coinId: t.varchar({ length: 255 }).notNull(),
+  createdAt: t.timestamp().defaultNow().notNull(),
+  updatedAt: t.timestamp().defaultNow().notNull(),
+}));
+
+export const FavoriteRelations = relations(Favorite, ({ one }) => ({
+  user: one(User, { fields: [Favorite.userId], references: [User.id] }),
 }));
