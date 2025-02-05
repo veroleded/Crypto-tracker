@@ -3,8 +3,16 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
+const COINGECKO_URL = "https://api.coingecko.com/api/v3";
+
+const COINGECKO_HEADERS = {
+  "Content-Type": "application/json",
+  Accept: "application/json",
+};
+
 const coinSchema = z.object({
   id: z.string(),
+
   symbol: z.string(),
   name: z.string(),
   current_price: z.number(),
@@ -12,73 +20,192 @@ const coinSchema = z.object({
   image: z.string(),
 });
 
+const coinDetailsSchema = z
+  .object({
+    id: z.string(),
+    symbol: z.string(),
+    name: z.string(),
+    description: z
+      .object({
+        en: z.string(),
+      })
+      .nullable(),
+    image: z.object({
+      large: z.string(),
+      small: z.string(),
+      thumb: z.string(),
+    }),
+    market_data: z.object({
+      current_price: z.object({
+        usd: z.number(),
+      }),
+      market_cap_rank: z.number(),
+      market_cap: z.object({
+        usd: z.number(),
+      }),
+      total_volume: z.object({
+        usd: z.number(),
+      }),
+      high_24h: z.object({
+        usd: z.number(),
+      }),
+      low_24h: z.object({
+        usd: z.number(),
+      }),
+      price_change_percentage_24h: z.number(),
+      price_change_percentage_7d: z.number(),
+      price_change_percentage_30d: z.number(),
+      price_change_percentage_1y: z.number(),
+      circulating_supply: z.number(),
+      total_supply: z.number().nullable(),
+      max_supply: z.number().nullable(),
+      ath: z.object({
+        usd: z.number(),
+      }),
+      ath_date: z.object({
+        usd: z.string(),
+      }),
+      atl: z.object({
+        usd: z.number(),
+      }),
+      atl_date: z.object({
+        usd: z.string(),
+      }),
+    }),
+    links: z
+      .object({
+        homepage: z.array(z.string()),
+        blockchain_site: z.array(z.string()),
+        official_forum_url: z.array(z.string()),
+        twitter_screen_name: z.string().nullable(),
+        telegram_channel_identifier: z.string().nullable(),
+        subreddit_url: z.string().nullable(),
+      })
+      .nullable(),
+    genesis_date: z.string().nullable(),
+    community_data: z
+      .object({
+        twitter_followers: z.number().nullable(),
+        reddit_subscribers: z.number().nullable(),
+      })
+      .nullable(),
+    developer_data: z
+      .object({
+        forks: z.number().nullable(),
+        stars: z.number().nullable(),
+        subscribers: z.number().nullable(),
+      })
+      .nullable(),
+  })
+  .passthrough();
+
 export type Coin = z.infer<typeof coinSchema>;
+export type CoinDetails = z.infer<typeof coinDetailsSchema>;
 
 export const coinRouter = createTRPCRouter({
-  getTop100Coins: publicProcedure.query(async () => {
-    try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false",
-        {
-          headers: {
-            Accept: "application/json",
+  getTop100Coins: publicProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        perPage: z.number().min(1).max(100).default(10),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const response = await fetch(
+          `${COINGECKO_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${input.perPage}&page=${input.page}&sparkline=false`,
+          {
+            headers: COINGECKO_HEADERS,
+            next: { revalidate: 10 },
           },
-          next: { revalidate: 10 }, // кэшируем на 1 минуту
-        },
-      );
+        );
 
-      if (!response.ok) {
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("CoinGecko API Error:", {
+            status: response.status,
+            statusText: response.statusText,
+            errorText,
+          });
+
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Failed to fetch coins: ${response.status} - ${errorText}`,
+          });
+        }
+
+        const rawData = (await response.json()) as Coin[];
+        const validatedData = z.array(coinSchema).safeParse(rawData);
+
+        if (!validatedData.success) {
+          console.error("Validation error:", validatedData.error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Invalid data format from API",
+          });
+        }
+
+        return {
+          coins: validatedData.data,
+          totalCoins: 100, // CoinGecko API limit
+        };
+      } catch (error) {
+        console.error("Error in getTop100Coins:", error);
+        if (error instanceof TRPCError) throw error;
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to fetch coins: ${response.status}`,
+          message: "Failed to fetch or parse coins data",
         });
       }
+    }),
 
-      const rawData = (await response.json()) as Coin[];
+  getDetailsById: publicProcedure
+    .input(z.string())
+    .query(async ({ input: id }) => {
+      try {
+        const response = await fetch(
+          `${COINGECKO_URL}/coins/${id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`,
+          {
+            headers: COINGECKO_HEADERS,
+            next: { revalidate: 30 },
+          },
+        );
 
-      // Добавляем логирование для отладки
-      console.log("Raw API response:", JSON.stringify(rawData).slice(0, 200));
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("CoinGecko API Error:", {
+            status: response.status,
+            statusText: response.statusText,
+            errorText,
+          });
 
-      const validatedData = z.array(coinSchema).safeParse(rawData);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `Failed to fetch coin: ${response.status} - ${errorText}`,
+          });
+        }
 
-      if (!validatedData.success) {
-        console.error("Validation error:", validatedData.error);
+        const rawData = await response.json();
+        const validatedData = coinDetailsSchema.safeParse(rawData);
+
+        if (!validatedData.success) {
+          console.error("Validation error:", validatedData.error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Invalid data format from API",
+          });
+        }
+
+        return validatedData.data;
+      } catch (error) {
+        console.error("Error fetching coin details:", error);
+        if (error instanceof TRPCError) throw error;
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Invalid data format from API",
+          message: "Failed to fetch coin details",
         });
       }
-
-      return validatedData.data;
-    } catch (error) {
-      console.error("Error in getTop100Coins:", error);
-      if (error instanceof TRPCError) throw error;
-
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch or parse coins data",
-      });
-    }
-  }),
-
-  // getDetailsById: publicProcedure.query(async (id: string) => {
-  //   try {
-  //     const response = await fetch("");
-
-  //     if (!response.ok) {
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message: `Failed to fetch coin: ${response.status}`,
-  //       });
-  //     }
-  //     const data = (await response.json()) as Coin;
-  //     return data;
-  //   } catch (error) {
-  //     console.error("Error fetching coins:", error);
-  //     throw new TRPCError({
-  //       code: "INTERNAL_SERVER_ERROR",
-  //       message: "Failed to fetch or parse coins data",
-  //     });
-  //   }
-  // }),
+    }),
 });
