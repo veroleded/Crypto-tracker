@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+
+import { Button } from "@acme/ui/button";
 
 import { api } from "~/trpc/react";
 import { CoinDescription } from "./coin-description";
@@ -33,6 +37,18 @@ export function CoinDetails({ coinId }: Props) {
 
   return (
     <div className="container mx-auto space-y-8 px-4 py-8">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 mb-2 text-muted-foreground hover:text-foreground"
+      >
+        <Link href="/" className="flex items-center gap-1.5">
+          <ChevronLeft className="h-4 w-4" />
+          Back to List
+        </Link>
+      </Button>
+
       <div className="flex items-center gap-4">
         <Image
           src={coin.image.large}
