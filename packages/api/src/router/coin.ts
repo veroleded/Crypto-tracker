@@ -1,10 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-
-
 import { createTRPCRouter, publicProcedure } from "../trpc";
-
 
 const coinSchema = z.object({
   id: z.string(),
@@ -32,8 +29,29 @@ export const coinRouter = createTRPCRouter({
       }
       console.log("response", response);
 
-      const data = await response.json();
+      const data = (await response.json()) as Coin[];
       return z.array(coinSchema).parse(data);
+    } catch (error) {
+      console.error("Error fetching coins:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch or parse coins data",
+      });
+    }
+  }),
+
+  getDetailsById: publicProcedure.query(async (id: string) => {
+    try {
+      const response = await fetch("");
+
+      if (!response.ok) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch coin: ${response.status}`,
+        });
+      }
+      const data = (await response.json()) as Coin;
+      return data;
     } catch (error) {
       console.error("Error fetching coins:", error);
       throw new TRPCError({
