@@ -1,4 +1,3 @@
- 
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
@@ -14,17 +13,17 @@ export function CoinItem({ coin }: Props) {
     <Link
       href={`/coins/${coin.id}`}
       key={coin.id}
-      className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+      className="flex w-full items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <Image
           src={coin.image}
           alt={coin.name}
-          className="h-8 w-8"
+          className="h-8 w-8 shrink-0"
           width={32}
           height={32}
         />
-        <div>
+        <div className="min-w-0">
           <div className="line-clamp-1 font-medium">{coin.name}</div>
           <div className="text-sm text-muted-foreground">
             {coin.symbol.toUpperCase()}
@@ -32,7 +31,7 @@ export function CoinItem({ coin }: Props) {
         </div>
       </div>
 
-      <div className="text-right">
+      <div className="shrink-0 text-right">
         <div className="font-medium">
           ${coin.current_price.toLocaleString()}
         </div>

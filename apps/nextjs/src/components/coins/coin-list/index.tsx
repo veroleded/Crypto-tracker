@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 
+
+
 import { api } from "~/trpc/react";
 import { CoinItem } from "./coin-item";
 import { Pagination } from "./pagination";
 import { SkeletonCoinList } from "./skeleton-coin-list";
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -32,8 +35,8 @@ export function CoinList() {
   const totalPages = Math.ceil(data.totalCoins / ITEMS_PER_PAGE);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mx-auto max-w-full space-y-6 sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl">
+      <div className="grid grid-cols-1 gap-4">
         {data.coins.map((coin) => (
           <CoinItem key={coin.id} coin={coin} />
         ))}
