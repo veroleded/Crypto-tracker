@@ -8,6 +8,7 @@ import { cn } from "@acme/ui/utils";
 
 import "~/app/globals.css";
 
+import { LogoutButton } from "~/components/logout-button";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
@@ -44,6 +45,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TRPCReactProvider>
+            <LogoutButton />
             <main className="flex min-h-screen flex-col">{props.children}</main>
           </TRPCReactProvider>
           <Toaster />
