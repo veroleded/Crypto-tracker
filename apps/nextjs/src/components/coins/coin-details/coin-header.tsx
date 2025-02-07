@@ -1,5 +1,6 @@
-import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 import type { CoinDetails } from "@acme/api";
 import { Button } from "@acme/ui/button";
@@ -12,9 +13,9 @@ export function CoinHeader({ coin }: Props) {
   return (
     <div className="flex items-center gap-4">
       <Button variant="ghost" className="p-0" asChild>
-        <a href="/" className="flex h-10 w-10 items-center justify-center">
+        <Link href="/" className="flex h-10 w-10 items-center justify-center">
           <ChevronLeft className="h-6 w-6" />
-        </a>
+        </Link>
       </Button>
       <Image
         src={coin.image.large}

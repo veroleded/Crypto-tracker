@@ -1,76 +1,28 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
 
-import { Button } from "@acme/ui/button";
 
-import { api } from "~/trpc/react";
+import type { CoinDetails as CoinDetailsType } from "@acme/api";
 import { CoinDescription } from "./coin-description";
+import { CoinHeader } from "./coin-header";
 import { CoinLinks } from "./coin-links";
+import { CoinPrice } from "./coin-price";
 import { CoinStats } from "./coin-stats";
-import { SkeletonCoinDetails } from "./skeleton";
 
 interface Props {
-  coinId: string;
+  coin: CoinDetailsType;
 }
 
-export function CoinDetails({ coinId }: Props) {
-  const {
-    data: coin,
-    isLoading,
-    isError,
-  } = api.coin.getDetailsById.useQuery(coinId);
-
-  if (isLoading) {
-    return <SkeletonCoinDetails />;
-  }
-
-  if (isError || !coin) {
-    return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-        Failed to load coin details
-      </div>
-    );
-  }
-
+export function CoinDetails({ coin }: Props) {
   return (
-    <div className="container mx-auto space-y-8 px-4 py-8">
-      <Button
-        asChild
-        variant="ghost"
-        size="sm"
-        className="-ml-2 mb-2 text-muted-foreground hover:text-foreground"
-      >
-        <Link href="/" className="flex items-center gap-1.5">
-          <ChevronLeft className="h-4 w-4" />
-          Back to List
-        </Link>
-      </Button>
-
-      <div className="flex items-center gap-4">
-        <Image
-          src={coin.image.large}
-          alt={coin.name}
-          className="h-16 w-16 rounded-full"
-          width={64}
-          height={64}
-          priority
-        />
-        <div>
-          <h1 className="text-3xl font-bold">
-            {coin.name} ({coin.symbol.toUpperCase()})
-          </h1>
-          <p className="text-xl font-medium">
-            ${coin.market_data.current_price.usd.toLocaleString()}
-          </p>
-        </div>
+    <>
+      <CoinHeader coin={coin} />
+      <div className="grid grid-cols-1 gap-6">
+        <CoinPrice coin={coin} />
+        <CoinStats coin={coin} />
+        <CoinDescription coin={coin} />
+        <CoinLinks coin={coin} />
       </div>
-
-      <CoinStats coin={coin} />
-      <CoinDescription coin={coin} />
-      <CoinLinks coin={coin} />
-    </div>
+    </>
   );
 }

@@ -1,8 +1,13 @@
 import { Skeleton } from "@acme/ui/skeleton";
+import { Pagination } from "./pagination";
 
-export function SkeletonCoinList() {
+interface Props {
+  currentPage: number;
+}
+
+export function SkeletonCoinList({ currentPage }: Props) {
   return (
-    <div className="mx-auto max-w-full space-y-6 sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl">
+    <div className="mx-auto w-full max-w-[1920px] space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-4">
         {Array.from({ length: 10 }).map((_, i) => (
           <div
@@ -25,13 +30,13 @@ export function SkeletonCoinList() {
         ))}
       </div>
 
-      <div className="flex items-center justify-center gap-2">
-        <Skeleton className="h-9 w-9" />
-        <Skeleton className="h-9 w-9" />
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-9 w-9" />
-        <Skeleton className="h-9 w-9" />
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={10}
+        onPageChange={() => {
+          // Пустая функция, так как во время загрузки пагинация неактивна
+        }}
+      />
     </div>
   );
 }

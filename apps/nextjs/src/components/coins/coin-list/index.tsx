@@ -1,27 +1,33 @@
 "use client";
 
-import { useState } from "react";
-
-
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { api } from "~/trpc/react";
 import { CoinItem } from "./coin-item";
 import { Pagination } from "./pagination";
 import { SkeletonCoinList } from "./skeleton-coin-list";
 
-
 const ITEMS_PER_PAGE = 10;
 
 export function CoinList() {
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page")) || 1;
 
   const { data, isLoading, isError } = api.coin.getTop100Coins.useQuery({
     page,
     perPage: ITEMS_PER_PAGE,
   });
 
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", newPage.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   if (isLoading) {
-    return <SkeletonCoinList />;
+    return <SkeletonCoinList currentPage={page} />;
   }
 
   if (isError || !data) {
@@ -35,7 +41,7 @@ export function CoinList() {
   const totalPages = Math.ceil(data.totalCoins / ITEMS_PER_PAGE);
 
   return (
-    <div className="mx-auto max-w-full space-y-6 sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl">
+    <div className="mx-auto w-full max-w-[1920px] space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-4">
         {data.coins.map((coin) => (
           <CoinItem key={coin.id} coin={coin} />
@@ -45,7 +51,7 @@ export function CoinList() {
       <Pagination
         currentPage={page}
         totalPages={totalPages}
-        onPageChange={setPage}
+        onPageChange={handlePageChange}
       />
     </div>
   );

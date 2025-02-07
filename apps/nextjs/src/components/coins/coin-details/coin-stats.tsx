@@ -72,7 +72,7 @@ export function CoinStats({ coin }: { coin: CoinDetails }) {
               value={
                 coin.market_data.max_supply
                   ? coin.market_data.max_supply.toLocaleString()
-                  : "∞"
+                  : "Unknown"
               }
             />
             <StatCard
