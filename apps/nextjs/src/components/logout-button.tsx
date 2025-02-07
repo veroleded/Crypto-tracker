@@ -1,13 +1,18 @@
+import type { ComponentPropsWithoutRef } from "react";
+
 import { logout } from "~/actions/auth";
 import { SubmitButton } from "~/components/ui/submit-button";
 
-export function LogoutButton() {
+type LogoutButtonProps = ComponentPropsWithoutRef<typeof SubmitButton>;
+
+export function LogoutButton({ className, ...props }: LogoutButtonProps) {
   return (
-    <form className="absolute right-4 top-4">
+    <form>
       <SubmitButton
         formAction={logout}
         variant="ghost"
-        className="text-sm text-muted-foreground hover:text-foreground"
+        className={className}
+        {...props}
       >
         Logout
       </SubmitButton>
