@@ -3,41 +3,50 @@
 import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { Container } from "~/components/layout/container";
+import type { RouterOutputs } from "@acme/api";
+
 import { api } from "~/trpc/react";
 import { SkeletonCoinList } from "../skeleton-coin-list";
 import { CoinItem } from "./coin-item";
 import { Pagination } from "./pagination";
 
-const ITEMS_PER_PAGE = 10;
 
-export function CoinList() {
+interface Props {
+  initialData: RouterOutputs["coin"]["getTop100Coins"];
+  currentPage: number;
+  itemsPerPage: number;
+}
+
+export function CoinListClient({
+  initialData,
+  currentPage,
+  itemsPerPage,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const page = Number(searchParams.get("page")) || 1;
   const utils = api.useUtils();
 
-  const { data, isLoading, isError } = api.coin.getTop100Coins.useQuery({
-    page,
-    perPage: ITEMS_PER_PAGE,
-  });
+  const { data, isLoading, isError } = api.coin.getTop100Coins.useQuery(
+    {
+      page: currentPage,
+      perPage: itemsPerPage,
+    },
+    {
+      initialData,
+      refetchOnMount: false,
+    },
+  );
 
   // Предзагрузка следующей страницы
   useEffect(() => {
-    if (page < 10) {
-      // У нас максимум 10 страниц (100 монет / 10 на страницу)
+    if (currentPage < 10) {
       void utils.coin.getTop100Coins.prefetch({
-        page: page + 1,
-        perPage: ITEMS_PER_PAGE,
+        page: currentPage + 1,
+        perPage: itemsPerPage,
       });
     }
-
-    // Очищаем состояние при размонтировании
-    return () => {
-      void utils.coin.getTop100Coins.reset();
-    };
-  }, [page, utils]);
+  }, [currentPage, itemsPerPage, utils]);
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams);
@@ -46,23 +55,21 @@ export function CoinList() {
   };
 
   if (isLoading) {
-    return <SkeletonCoinList />;
+    return <SkeletonCoinList currentPage={currentPage} />;
   }
 
   if (isError || !data) {
     return (
-      <Container>
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-          Failed to load coins
-        </div>
-      </Container>
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
+        Failed to load coins
+      </div>
     );
   }
 
-  const totalPages = Math.ceil(data.totalCoins / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(data.totalCoins / itemsPerPage);
 
   return (
-    <Container className="space-y-6">
+    <div className="mx-auto w-full max-w-[1920px] space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-4">
         {data.coins.map((coin) => (
           <CoinItem key={coin.id} coin={coin} />
@@ -70,10 +77,10 @@ export function CoinList() {
       </div>
 
       <Pagination
-        currentPage={page}
+        currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}
       />
-    </Container>
+    </div>
   );
 }

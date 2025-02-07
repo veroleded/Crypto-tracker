@@ -1,9 +1,7 @@
-import { FavoriteList } from "~/components/coins/favorite-list";
+import { SkeletonCoinList } from "~/components/coins/skeleton-coin-list";
 import { Container } from "~/components/layout/container";
 
-export const dynamic = "force-dynamic";
-
-export default function FavoritesPage() {
+export default function LoadingPage() {
   return (
     <div className="flex-1 py-8">
       <Container>
@@ -13,7 +11,7 @@ export default function FavoritesPage() {
       </Container>
 
       <div className="mt-8">
-        <FavoriteList />
+        <SkeletonCoinList currentPage={1} />
       </div>
     </div>
   );

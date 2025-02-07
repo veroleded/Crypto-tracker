@@ -1,25 +1,18 @@
 import { CoinList } from "~/components/coins/coin-list";
-import { api } from "~/trpc/server";
+import { Container } from "~/components/layout/container";
 
-interface Props {
-  searchParams: { page?: string; };
-}
-
-export default async function HomePage({ searchParams }: Props) {
-  // Предзагрузка данных на сервере
-  const page = Number(searchParams.page) || 1;
-  await api.coin.getTop100Coins.prefetch({
-    page,
-    perPage: 10,
-  });
-
+export default function HomePage() {
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      <div className="flex flex-col gap-2">
-        <div className="mb-4 flex items-center justify-between border-b border-gray-50 pb-2">
-          <h2 className="text-xl font-bold">Top 100 Cryptocurrencies</h2>
+    <div className="flex-1 py-8">
+      <Container>
+        <div className="border-b pb-5">
+          <h1 className="text-2xl font-semibold leading-7">
+            Top 100 Cryptocurrencies
+          </h1>
         </div>
+      </Container>
 
+      <div className="mt-8">
         <CoinList />
       </div>
     </div>
