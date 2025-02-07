@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { useState } from "react";
 
 
 
@@ -117,16 +117,15 @@ export function Header() {
             ))}
           </div>
           <div className="my-6 h-px bg-border" />
-          <SheetClose asChild>
-            <LogoutButton
-              className={cn(
-                "h-11 w-full",
-                "justify-start font-normal",
-                "text-muted-foreground hover:text-foreground",
-                "transition-all duration-200",
-              )}
-            />
-          </SheetClose>
+          <LogoutButton
+            className={cn(
+              "h-11 w-full",
+              "justify-start font-normal",
+              "text-muted-foreground hover:text-foreground",
+              "transition-all duration-200",
+            )}
+            onLogoutSuccess={() => setOpen(false)}
+          />
         </nav>
       </SheetContent>
     </Sheet>
