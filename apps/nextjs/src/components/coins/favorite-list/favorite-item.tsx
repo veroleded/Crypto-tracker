@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Coin } from "@acme/api";
@@ -18,17 +19,16 @@ export function FavoriteItem({ coin }: Props) {
   const removeMutation = api.favorite.remove.useMutation({
     onSuccess: () => {
       void utils.favorite.getAll.invalidate();
+      void utils.coin.getByIds.invalidate();
       router.refresh();
     },
   });
 
+  const handleRemove = useCallback(() => {
+    removeMutation.mutate({ coinId: coin.id });
+  }, [coin.id, removeMutation]);
+
   return (
-    <CoinItem
-      key={coin.id}
-      coin={coin}
-      onRemoveFromFavorites={() => {
-        removeMutation.mutate({ coinId: coin.id });
-      }}
-    />
+    <CoinItem key={coin.id} coin={coin} onRemoveFromFavorites={handleRemove} />
   );
 }

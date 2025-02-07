@@ -17,7 +17,7 @@ export default async function CoinPage({ params }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4">
+    <div className="mt-16 flex flex-col gap-6 p-4">
       <CoinDetails coin={coin} />
     </div>
   );

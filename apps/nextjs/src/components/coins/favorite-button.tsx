@@ -1,8 +1,7 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import { Heart, Loader2 } from "lucide-react";
-
-
 
 import { Button } from "@acme/ui/button";
 
@@ -13,95 +12,113 @@ interface FavoriteButtonProps {
   onRemove?: () => void;
 }
 
+interface MutationContext {
+  isFavorite: boolean;
+  favorites: {
+    favorites: { coinId: string }[];
+  };
+}
+
 export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
   const utils = api.useUtils();
 
   const { data: isFavorite, isLoading: isCheckingFavorite } =
     api.favorite.isFavorite.useQuery({ coinId });
 
-  const addMutation = api.favorite.add.useMutation({
-    onMutate: async () => {
-      await Promise.all([
-        utils.favorite.isFavorite.cancel({ coinId }),
-        utils.favorite.getAll.cancel(),
-        utils.coin.getByIds.cancel(),
-      ]);
+  const handleMutationStart = useCallback(async () => {
+    await Promise.all([
+      utils.favorite.isFavorite.cancel({ coinId }),
+      utils.favorite.getAll.cancel(),
+      utils.coin.getByIds.cancel(),
+    ]);
 
-      const prevData = {
-        isFavorite: utils.favorite.isFavorite.getData({ coinId }),
-        favorites: utils.favorite.getAll.getData(),
-      };
+    const prevData = {
+      isFavorite: utils.favorite.isFavorite.getData({ coinId }) ?? false,
+      favorites: utils.favorite.getAll.getData() ?? { favorites: [] },
+    };
 
-      utils.favorite.isFavorite.setData({ coinId }, true);
-      const oldFavorites = prevData.favorites?.favorites ?? [];
-      utils.favorite.getAll.setData(undefined, {
-        favorites: [...oldFavorites, { coinId }],
-      });
+    return prevData;
+  }, [coinId, utils]);
 
-      return prevData;
-    },
-    onError: (_, __, context) => {
+  const handleMutationError = useCallback(
+    (context: MutationContext | undefined) => {
       if (context) {
         utils.favorite.isFavorite.setData({ coinId }, context.isFavorite);
         utils.favorite.getAll.setData(undefined, context.favorites);
       }
     },
-    onSettled: () => {
-      void utils.favorite.isFavorite.invalidate({ coinId });
-      void utils.favorite.getAll.invalidate();
-      void utils.coin.getByIds.invalidate();
+    [coinId, utils],
+  );
+
+  const handleMutationSettled = useCallback(() => {
+    void utils.favorite.isFavorite.invalidate({ coinId });
+    void utils.favorite.getAll.invalidate();
+    void utils.coin.getByIds.invalidate();
+  }, [coinId, utils]);
+
+  const addMutation = api.favorite.add.useMutation({
+    onMutate: async () => {
+      const prevData = await handleMutationStart();
+      utils.favorite.isFavorite.setData({ coinId }, true);
+      utils.favorite.getAll.setData(undefined, {
+        favorites: [...prevData.favorites.favorites, { coinId }],
+      });
+      return prevData;
     },
+    onError: (_, __, context) => handleMutationError(context),
+    onSettled: handleMutationSettled,
   });
 
   const removeMutation = api.favorite.remove.useMutation({
     onMutate: async () => {
-      await Promise.all([
-        utils.favorite.isFavorite.cancel({ coinId }),
-        utils.favorite.getAll.cancel(),
-        utils.coin.getByIds.cancel(),
-      ]);
-
-      const prevData = {
-        isFavorite: utils.favorite.isFavorite.getData({ coinId }),
-        favorites: utils.favorite.getAll.getData(),
-      };
-
+      const prevData = await handleMutationStart();
       utils.favorite.isFavorite.setData({ coinId }, false);
-      const oldFavorites = prevData.favorites?.favorites ?? [];
       utils.favorite.getAll.setData(undefined, {
-        favorites: oldFavorites.filter((f) => f.coinId !== coinId),
+        favorites: prevData.favorites.favorites.filter(
+          (f) => f.coinId !== coinId,
+        ),
       });
-
       onRemove?.();
       return prevData;
     },
-    onError: (_, __, context) => {
-      if (context) {
-        utils.favorite.isFavorite.setData({ coinId }, context.isFavorite);
-        utils.favorite.getAll.setData(undefined, context.favorites);
-      }
-    },
-    onSettled: () => {
-      void utils.favorite.isFavorite.invalidate({ coinId });
-      void utils.favorite.getAll.invalidate();
-      void utils.coin.getByIds.invalidate();
-    },
+    onError: (_, __, context) => handleMutationError(context),
+    onSettled: handleMutationSettled,
   });
 
   const isLoading = addMutation.isPending || removeMutation.isPending;
 
-  const handleToggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleToggleFavorite = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    if (isLoading) return;
+      if (isLoading) return;
 
-    if (isFavorite) {
-      removeMutation.mutate({ coinId });
-    } else {
-      addMutation.mutate({ coinId });
+      if (isFavorite) {
+        removeMutation.mutate({ coinId });
+      } else {
+        addMutation.mutate({ coinId });
+      }
+    },
+    [isLoading, isFavorite, removeMutation, addMutation, coinId],
+  );
+
+  const buttonContent = useMemo(() => {
+    if (isLoading) {
+      return <Loader2 className="h-4 w-4 animate-spin" />;
     }
-  };
+
+    return (
+      <Heart
+        className={`h-4 w-4 ${isFavorite ? "fill-current text-red-500" : ""}`}
+      />
+    );
+  }, [isLoading, isFavorite]);
+
+  const buttonLabel = useMemo(
+    () => (isFavorite ? "Remove from favorites" : "Add to favorites"),
+    [isFavorite],
+  );
 
   if (isCheckingFavorite) {
     return <Loader2 className="h-4 w-4 animate-spin" />;
@@ -115,16 +132,8 @@ export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
       onClick={handleToggleFavorite}
       disabled={isLoading}
     >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Heart
-          className={`h-4 w-4 ${isFavorite ? "fill-current text-red-500" : ""}`}
-        />
-      )}
-      <span className="sr-only">
-        {isFavorite ? "Remove from favorites" : "Add to favorites"}
-      </span>
+      {buttonContent}
+      <span className="sr-only">{buttonLabel}</span>
     </Button>
   );
 }

@@ -1,8 +1,7 @@
+import { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-
-
 
 import type { CoinDetails } from "@acme/api";
 import { Button } from "@acme/ui/button";
@@ -14,26 +13,41 @@ interface Props {
 }
 
 export function CoinHeader({ coin }: Props) {
+  const coinInfo = useMemo(
+    () => ({
+      name: coin.name,
+      symbol: coin.symbol.toUpperCase(),
+      image: coin.image.large,
+    }),
+    [coin.name, coin.symbol, coin.image.large],
+  );
+
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" className="p-0" asChild>
+        <Button
+          variant="ghost"
+          className="p-0"
+          asChild
+          aria-label="Back to home page"
+        >
           <Link href="/" className="flex h-10 w-10 items-center justify-center">
             <ChevronLeft className="h-6 w-6" />
           </Link>
         </Button>
+
         <Image
-          src={coin.image.large}
-          alt={coin.name}
+          src={coinInfo.image}
+          alt={coinInfo.name}
           width={32}
           height={32}
           className="h-8 w-8"
+          priority
         />
+
         <div>
-          <h1 className="text-xl font-bold">{coin.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {coin.symbol.toUpperCase()}
-          </p>
+          <h1 className="text-xl font-bold">{coinInfo.name}</h1>
+          <p className="text-sm text-muted-foreground">{coinInfo.symbol}</p>
         </div>
       </div>
 
