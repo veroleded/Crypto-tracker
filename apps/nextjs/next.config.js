@@ -26,6 +26,9 @@ const config = {
       allowedOrigins: ["localhost:3000"],
     },
   },
+
+  /** Build configuration */
+  distDir: ".next",
   output: "standalone",
 };
 
