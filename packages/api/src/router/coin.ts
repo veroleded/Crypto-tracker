@@ -1,8 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-
-
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 const COINGECKO_URL = "https://api.coingecko.com/api/v3";
@@ -12,36 +10,18 @@ const COINGECKO_HEADERS = {
   Accept: "application/json",
 };
 
-// Кэш для данных монет
-const CACHE_DURATION = 30 * 1000; // 30 секунд
-const cache = new Map<string, { data: unknown; timestamp: number }>();
-
-function getCacheKey(path: string, params: Record<string, string | number>) {
-  return `${path}?${new URLSearchParams(
-    Object.entries(params).map(([k, v]) => [k, String(v)]),
-  )}`;
-}
-
-async function fetchWithCache<T>(
+async function fetchFromApi<T>(
   path: string,
   params: Record<string, string | number>,
   schema: z.ZodType<T>,
 ) {
-  const cacheKey = getCacheKey(path, params);
-  const now = Date.now();
-  const cached = cache.get(cacheKey);
-
-  if (cached && now - cached.timestamp < CACHE_DURATION) {
-    return cached.data as T;
+  const queryParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    queryParams.append(key, String(value));
   }
-
-  const queryParams = new URLSearchParams(
-    Object.entries(params).map(([k, v]) => [k, String(v)]),
-  );
 
   const response = await fetch(`${COINGECKO_URL}${path}?${queryParams}`, {
     headers: COINGECKO_HEADERS,
-    next: { revalidate: 10 },
   });
 
   if (!response.ok) {
@@ -69,7 +49,6 @@ async function fetchWithCache<T>(
     });
   }
 
-  cache.set(cacheKey, { data: validatedData.data, timestamp: now });
   return validatedData.data;
 }
 
@@ -173,7 +152,7 @@ export const coinRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const coins = await fetchWithCache(
+      const coins = await fetchFromApi(
         "/coins/markets",
         {
           vs_currency: "usd",
@@ -195,40 +174,20 @@ export const coinRouter = createTRPCRouter({
     .input(z.string())
     .query(async ({ input: id }) => {
       try {
-        const response = await fetch(
-          `${COINGECKO_URL}/coins/${id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`,
+        const data = await fetchFromApi(
+          `/coins/${id}`,
           {
-            headers: COINGECKO_HEADERS,
-            next: { revalidate: 30 },
+            localization: "false",
+            tickers: "false",
+            market_data: "true",
+            community_data: "true",
+            developer_data: "true",
+            sparkline: "false",
           },
+          coinDetailsSchema,
         );
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("CoinGecko API Error:", {
-            status: response.status,
-            statusText: response.statusText,
-            errorText,
-          });
-
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: `Failed to fetch coin: ${response.status} - ${errorText}`,
-          });
-        }
-
-        const rawData = await response.json();
-        const validatedData = coinDetailsSchema.safeParse(rawData);
-
-        if (!validatedData.success) {
-          console.error("Validation error:", validatedData.error);
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Invalid data format from API",
-          });
-        }
-
-        return validatedData.data;
+        return data;
       } catch (error) {
         console.error("Error fetching coin details:", error);
         if (error instanceof TRPCError) throw error;
@@ -247,7 +206,7 @@ export const coinRouter = createTRPCRouter({
         return { coins: [] };
       }
 
-      const coins = await fetchWithCache(
+      const coins = await fetchFromApi(
         "/coins/markets",
         {
           vs_currency: "usd",
