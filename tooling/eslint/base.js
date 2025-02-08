@@ -1,3 +1,4 @@
+;
 /// <reference types="./types.d.ts" />
 
 import * as path from "node:path";
@@ -6,6 +7,10 @@ import eslint from "@eslint/js";
 import importPlugin from "eslint-plugin-import";
 import turboPlugin from "eslint-plugin-turbo";
 import tseslint from "typescript-eslint";
+
+
+
+
 
 /**
  * All packages that leverage t3-env should use this rule

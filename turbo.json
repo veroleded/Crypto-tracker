@@ -46,12 +46,11 @@
     }
   },
   "globalEnv": [
-    "POSTGRES_URL",
-    "AUTH_DISCORD_ID",
-    "AUTH_DISCORD_SECRET",
-    "AUTH_REDIRECT_PROXY_URL",
-    "AUTH_SECRET",
-    "PORT"
+    "DATABASE_URL",
+    "DISCORD_CLIENT_ID",
+    "DISCORD_CLIENT_SECRET",
+    "NEXT_PUBLIC_COINGECKO_API_BASE_URL",
+    "COINGECKO_API_KEY"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
@@ -59,6 +58,7 @@
     "VERCEL",
     "VERCEL_ENV",
     "VERCEL_URL",
-    "npm_lifecycle_event"
+    "npm_lifecycle_event",
+    "PORT"
   ]
 }

@@ -1,20 +1,20 @@
-import { CoinList } from "~/components/coin-list";
+import { Suspense } from "react";
+
+import { CoinList } from "~/components/coins/coin-list";
+import { PageHeader } from "~/components/layout/page-header";
+import { SkeletonCoinList } from "~/components/coins/skeleton-coin-list";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Crypto Tracker</h1>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between rounded-lg bg-muted p-4">
-          <div className="text-sm text-muted-foreground">
-            Top 100 Cryptocurrencies
-          </div>
-        </div>
-
-        <CoinList />
+    <div className="mt-16 flex-1 py-8">
+      <PageHeader
+        title="Top 100 Cryptocurrencies"
+        description="Track real-time prices, market cap, and trading volume of the top cryptocurrencies"
+      />
+      <div className="mt-8">
+        <Suspense fallback={<SkeletonCoinList />}>
+          <CoinList />
+        </Suspense>
       </div>
     </div>
   );

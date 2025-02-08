@@ -9,17 +9,26 @@ const config = {
   reactStrictMode: true,
 
   /** Enables hot reloading for local packages without a build step */
-  transpilePackages: [
-    "@acme/api",
-    "@acme/auth",
-    "@acme/db",
-    "@acme/ui",
-    "@acme/validators",
-  ],
+  transpilePackages: ["@acme/api", "@acme/db", "@acme/ui", "@acme/validators"],
 
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
+
+  /** Configure image domains */
+  images: {
+    remotePatterns: [{ hostname: "**" }],
+  },
+
+  /** Disable static generation for client components */
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["localhost:3000"],
+    },
+  },
+
+  /** Build configuration */
+  output: "standalone",
 };
 
 export default config;

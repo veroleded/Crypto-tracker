@@ -2,11 +2,24 @@ import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
-import { cn } from "@acme/ui";
+
+
 import { ThemeProvider } from "@acme/ui/theme";
 import { Toaster } from "@acme/ui/toast";
+import { cn } from "@acme/ui/utils";
+
+
+
+
+
 
 import "~/app/globals.css";
+
+
+
+import { Header } from "~/components/layout/header";
+import { TRPCReactProvider } from "~/trpc/react";
+
 
 export const metadata: Metadata = {
   title: "Crypto Tracker",
@@ -41,7 +54,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <main className="flex min-h-screen flex-col">{props.children}</main>
+          <TRPCReactProvider>
+            <Header />
+            <main className="flex min-h-screen flex-col">{props.children}</main>
+          </TRPCReactProvider>
           <Toaster />
         </ThemeProvider>
       </body>
