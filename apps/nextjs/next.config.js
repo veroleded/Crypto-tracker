@@ -28,7 +28,6 @@ const config = {
   },
 
   /** Build configuration */
-  distDir: ".next",
   output: "standalone",
 };
 
