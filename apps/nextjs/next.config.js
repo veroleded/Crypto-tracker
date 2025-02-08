@@ -9,12 +9,7 @@ const config = {
   reactStrictMode: true,
 
   /** Enables hot reloading for local packages without a build step */
-  transpilePackages: [
-    "@acme/api",
-    "@acme/db",
-    "@acme/ui",
-    "@acme/validators",
-  ],
+  transpilePackages: ["@acme/api", "@acme/db", "@acme/ui", "@acme/validators"],
 
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
@@ -32,7 +27,6 @@ const config = {
     },
   },
   output: "standalone",
-  staticPageGenerationTimeout: 1000,
 };
 
 export default config;
