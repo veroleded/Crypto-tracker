@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import { Heart, Loader2 } from "lucide-react";
+import { useCallback, useMemo } from "react";
 
 import { Button } from "@acme/ui/button";
 
@@ -22,44 +22,52 @@ interface MutationContext {
 export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
   const utils = api.useUtils();
 
-  const { data: isFavorite, isLoading: isCheckingFavorite } =
-    api.favorite.isFavorite.useQuery({ coinId });
+  // Получаем все избранные монеты одним запросом
+  const { data: favoritesData } = api.favorite.getAll.useQuery(undefined, {
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchInterval: 2 * 60 * 1000,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  });
+
+  // Проверяем статус избранного локально
+  const isFavorite = useMemo(() => {
+    if (!favoritesData) return false;
+    return favoritesData.favorites.some((f) => f.coinId === coinId);
+  }, [favoritesData, coinId]);
 
   const handleMutationStart = useCallback(async () => {
-    await Promise.all([
-      utils.favorite.isFavorite.cancel({ coinId }),
-      utils.favorite.getAll.cancel(),
-      utils.coin.getByIds.cancel(),
-    ]);
+    await utils.favorite.getAll.cancel();
+    await utils.coin.getByIds.cancel();
 
     const prevData = {
-      isFavorite: utils.favorite.isFavorite.getData({ coinId }) ?? false,
       favorites: utils.favorite.getAll.getData() ?? { favorites: [] },
     };
 
     return prevData;
-  }, [coinId, utils]);
+  }, [utils]);
 
   const handleMutationError = useCallback(
-    (context: MutationContext | undefined) => {
+    (context: { favorites: { favorites: { coinId: string; }[]; }; } | undefined) => {
       if (context) {
-        utils.favorite.isFavorite.setData({ coinId }, context.isFavorite);
         utils.favorite.getAll.setData(undefined, context.favorites);
       }
     },
-    [coinId, utils],
+    [utils],
   );
 
   const handleMutationSettled = useCallback(() => {
-    void utils.favorite.isFavorite.invalidate({ coinId });
     void utils.favorite.getAll.invalidate();
     void utils.coin.getByIds.invalidate();
-  }, [coinId, utils]);
+  }, [utils]);
 
   const addMutation = api.favorite.add.useMutation({
     onMutate: async () => {
       const prevData = await handleMutationStart();
-      utils.favorite.isFavorite.setData({ coinId }, true);
       utils.favorite.getAll.setData(undefined, {
         favorites: [...prevData.favorites.favorites, { coinId }],
       });
@@ -72,7 +80,6 @@ export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
   const removeMutation = api.favorite.remove.useMutation({
     onMutate: async () => {
       const prevData = await handleMutationStart();
-      utils.favorite.isFavorite.setData({ coinId }, false);
       utils.favorite.getAll.setData(undefined, {
         favorites: prevData.favorites.favorites.filter(
           (f) => f.coinId !== coinId,
@@ -120,7 +127,7 @@ export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
     [isFavorite],
   );
 
-  if (isCheckingFavorite) {
+  if (!favoritesData) {
     return <Loader2 className="h-4 w-4 animate-spin" />;
   }
 

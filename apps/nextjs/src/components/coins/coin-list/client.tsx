@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import type { RouterOutputs } from "@acme/api";
 
+import { ErrorMessage } from "~/components/ui/error-message";
 import { api } from "~/trpc/react";
 import { SkeletonCoinList } from "../skeleton-coin-list";
 import { CoinItem } from "./coin-item";
@@ -27,7 +28,7 @@ export function CoinListClient({
   const searchParams = useSearchParams();
   const utils = api.useUtils();
 
-  const { data, isLoading, isError } = api.coin.getTop100Coins.useQuery(
+  const { data, isLoading, isError, error } = api.coin.getTop100Coins.useQuery(
     {
       page: currentPage,
       perPage: itemsPerPage,
@@ -66,17 +67,30 @@ export function CoinListClient({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return <SkeletonCoinList />;
   }
 
-  if (isError || !data) {
+  console.log(error, isError, data);
+
+
+  if (error) {
     return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-        Failed to load coins
-      </div>
+      <ErrorMessage
+        title="Failed to load coins"
+        message={error.message}
+      />
     );
   }
+
+  // if (isError || !data) {
+  //   return (
+  //     <ErrorMessage
+  //       title="Failed to load coins"
+  //       message="There was an error loading your coins. Please try again later."
+  //     />
+  //   );
+  // }
 
   const totalPages = Math.ceil(data.totalCoins / itemsPerPage);
 

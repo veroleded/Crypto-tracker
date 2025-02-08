@@ -11,7 +11,7 @@ import { FavoriteItem } from "./favorite-item";
 export function FavoriteList() {
   const utils = api.useUtils();
 
-  const { data: favoritesData, isLoading: isLoadingFavorites } =
+  const { data: favoritesData, isLoading: isLoadingFavorites, error: favoritesError } =
     api.favorite.getAll.useQuery(undefined, {
       refetchInterval: 1 * 60 * 1000, // Обновлять каждые 1 минуту
       staleTime: 1 * 60 * 1000, // Данные считаются свежими 1 минуту
@@ -60,7 +60,16 @@ export function FavoriteList() {
     return (
       <ErrorMessage
         title="Failed to load favorites"
-        message="There was an error loading your favorite coins. Please try again later."
+        message={error.message}
+      />
+    );
+  }
+
+  if (favoritesError) {
+    return (
+      <ErrorMessage
+        title="Failed to load favorites"
+        message={favoritesError.message}
       />
     );
   }
