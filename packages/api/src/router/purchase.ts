@@ -5,6 +5,9 @@ import { CoinPurchase } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
+const MAX_DATE = new Date("9999-12-31");
+const MIN_DATE = new Date("2009-01-03");
+
 export const purchaseRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
@@ -12,7 +15,12 @@ export const purchaseRouter = createTRPCRouter({
         coinId: z.string(),
         amount: z.number().positive(),
         purchasePrice: z.number().positive(),
-        purchaseDate: z.string().transform((date) => new Date(date)),
+        purchaseDate: z.string()
+          .transform((date) => new Date(date))
+          .refine(
+            (date) => date > MIN_DATE && date < MAX_DATE,
+            "Purchase date must be after January 3, 2009 (Bitcoin's genesis block date)"
+          ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
