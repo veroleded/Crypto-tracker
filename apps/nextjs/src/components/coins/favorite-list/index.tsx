@@ -13,11 +13,14 @@ export function FavoriteList() {
 
   const { data: favoritesData, isLoading: isLoadingFavorites } =
     api.favorite.getAll.useQuery(undefined, {
-      refetchInterval: 30000, // 30 seconds
-      staleTime: 20000, // Consider data fresh for 20 seconds
-      gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
-      retry: 3, // Retry failed requests 3 times
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+      refetchInterval: 1 * 60 * 1000, // Обновлять каждые 1 минуту
+      staleTime: 1 * 60 * 1000, // Данные считаются свежими 1 минуту
+      gcTime: 10 * 60 * 1000, // Хранить неиспользуемые данные 10 минут
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
     });
 
   const ids = favoritesData?.favorites.map((v) => v.coinId) ?? [];
@@ -31,12 +34,14 @@ export function FavoriteList() {
     {
       enabled: ids.length > 0,
       placeholderData: (prev) => prev,
-      refetchInterval: 30000,
-      staleTime: 20000,
-      gcTime: 5 * 60 * 1000,
-      retry: 3,
+      refetchInterval: 2 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
     },
   );
 

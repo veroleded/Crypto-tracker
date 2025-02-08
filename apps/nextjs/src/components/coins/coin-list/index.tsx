@@ -23,45 +23,57 @@ export function CoinList() {
       perPage: ITEMS_PER_PAGE,
     },
     {
-      staleTime: 30 * 1000, // Данные считаются свежими 30 секунд
-      gcTime: 5 * 60 * 1000, // Хранить неиспользуемые данные 5 минут
-      refetchInterval: 30 * 1000, // Обновлять каждые 30 секунд
-      retry: 3,
+      staleTime: 2 * 60 * 1000, // Данные считаются свежими 2 минуты
+      gcTime: 10 * 60 * 1000, // Хранить неиспользуемые данные 10 минут
+      refetchInterval: 2 * 60 * 1000, // Обновлять каждые 2 минуты
+      retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
     },
   );
 
-  // Предварительная загрузка следующей и предыдущей страницы
-  const prefetchAdjacentPages = useCallback(() => {
-  // Следующая страница
-    if (page < MAX_PAGES) {
-      void utils.coin.getTop100Coins.prefetch({
-        page: page + 1,
-        perPage: ITEMS_PER_PAGE,
-      });
-    }
-    // Предыдущая страница
-    if (page > 1) {
-      void utils.coin.getTop100Coins.prefetch({
-        page: page - 1,
-        perPage: ITEMS_PER_PAGE,
-      });
-    }
-  }, [page, utils]);
+  // Предзагрузка только при явном переходе на страницу
+  const prefetchNextPage = useCallback(
+    (nextPage: number) => {
+      if (nextPage >= 1 && nextPage <= MAX_PAGES) {
+        void utils.coin.getTop100Coins.prefetch(
+          {
+            page: nextPage,
+            perPage: ITEMS_PER_PAGE,
+          },
+          {
+            staleTime: 2 * 60 * 1000,
+          },
+        );
+      }
+    },
+    [utils],
+  );
+
+  // Обработчик изменения страницы с предзагрузкой
+  const handlePageChangeWithPrefetch = useCallback(
+    (newPage: number) => {
+      handlePageChange(newPage);
+      // Предзагружаем следующую страницу только после явного перехода
+      prefetchNextPage(newPage + 1);
+    },
+    [handlePageChange, prefetchNextPage],
+  );
 
   useEffect(() => {
-    prefetchAdjacentPages();
     return () => {
       void utils.coin.getTop100Coins.reset();
     };
-  }, [prefetchAdjacentPages, utils]);
+  }, [utils]);
 
   const totalPages = useMemo(
     () => (data ? Math.ceil(data.totalCoins / ITEMS_PER_PAGE) : 0),
     [data],
   );
 
-  if (isLoading && !data) { // Показываем скелетон только если нет данных
+  if (isLoading && !data) {
     return <SkeletonCoinList />;
   }
 
@@ -92,7 +104,7 @@ export function CoinList() {
         <Pagination
           currentPage={page}
           totalPages={totalPages}
-          onPageChange={handlePageChange}
+          onPageChange={handlePageChangeWithPrefetch}
         />
       </div>
     </Container>

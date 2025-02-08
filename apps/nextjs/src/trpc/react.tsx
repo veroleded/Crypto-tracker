@@ -30,12 +30,14 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             // Глобальные настройки для всех запросов
-            staleTime: 20 * 1000, // Данные считаются свежими 20 секунд
-            gcTime: 5 * 60 * 1000, // Хранить неиспользуемые данные 5 минут
-            retry: 3, // Повторять неудачные запросы 3 раза
-            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Экспоненциальная задержка
+            staleTime: 2 * 60 * 1000, // Данные считаются свежими 2 минуты
+            gcTime: 10 * 60 * 1000, // Хранить неиспользуемые данные 10 минут
+            retry: 2, // Повторять неудачные запросы 2 раза
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
             refetchOnWindowFocus: false, // Отключаем автоматическое обновление при фокусе окна
-            refetchOnReconnect: true, // Обновляем при восстановлении соединения
+            refetchOnReconnect: false, // Отключаем автоматическое обновление при восстановлении соединения
+            refetchOnMount: false, // Отключаем автоматическое обновление при монтировании
+            refetchInterval: 2 * 60 * 1000, // Обновлять данные каждые 2 минуты
           },
         },
       }),

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 import type { RouterOutputs } from "@acme/api";
 
@@ -34,17 +34,29 @@ export function CoinListClient({
     },
     {
       initialData,
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchInterval: 2 * 60 * 1000,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       refetchOnMount: false,
     },
   );
 
-  // Предзагрузка следующей страницы
+
   useEffect(() => {
     if (currentPage < 10) {
-      void utils.coin.getTop100Coins.prefetch({
-        page: currentPage + 1,
-        perPage: itemsPerPage,
-      });
+      void utils.coin.getTop100Coins.prefetch(
+        {
+          page: currentPage + 1,
+          perPage: itemsPerPage,
+        },
+        {
+          staleTime: 2 * 60 * 1000,
+        },
+      );
     }
   }, [currentPage, itemsPerPage, utils]);
 
@@ -55,7 +67,7 @@ export function CoinListClient({
   };
 
   if (isLoading) {
-    return <SkeletonCoinList currentPage={currentPage} />;
+    return <SkeletonCoinList />;
   }
 
   if (isError || !data) {
