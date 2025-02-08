@@ -1,7 +1,6 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
-
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -18,7 +17,7 @@ const cache = new Map<string, { data: unknown; timestamp: number }>();
 
 function getCacheKey(path: string, params: Record<string, string | number>) {
   return `${path}?${new URLSearchParams(
-    Object.entries(params).map(([k, v]) => [k, String(v)]),
+    Object.entries(params).map(([k, v]) => [k, String(v)]) as unknown as string,
   )}`;
 }
 
@@ -36,7 +35,7 @@ async function fetchWithCache<T>(
   }
 
   const queryParams = new URLSearchParams(
-    Object.entries(params).map(([k, v]) => [k, String(v)]),
+    Object.entries(params).map(([k, v]) => [k, String(v)]) as unknown as string,
   );
 
   const response = await fetch(`${COINGECKO_URL}${path}?${queryParams}`, {

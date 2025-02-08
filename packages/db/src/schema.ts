@@ -1,4 +1,10 @@
-import { decimal, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  decimal,
+  pgTable,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const Favorite = pgTable("favorite", {
   id: uuid("id").defaultRandom().notNull().primaryKey(),
@@ -13,7 +19,10 @@ export const CoinPurchase = pgTable("coin_purchase", {
   userId: uuid("user_id").notNull(),
   coinId: varchar("coin_id", { length: 255 }).notNull(),
   amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
-  purchasePrice: decimal("purchase_price", { precision: 18, scale: 8 }).notNull(),
+  purchasePrice: decimal("purchase_price", {
+    precision: 18,
+    scale: 8,
+  }).notNull(),
   purchaseDate: timestamp("purchase_date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

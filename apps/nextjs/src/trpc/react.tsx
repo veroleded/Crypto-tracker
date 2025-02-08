@@ -7,15 +7,10 @@ import { loggerLink, unstable_httpBatchStreamLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import SuperJSON from "superjson";
 
-
-
 import type { AppRouter } from "@acme/api";
-
-
 
 import { env } from "~/env";
 import { createQueryClient } from "./query-client";
-
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {

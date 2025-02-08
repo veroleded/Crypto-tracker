@@ -9,4 +9,3 @@ export { updateSession } from "./middleware";
 
 // Types
 export type { SupabaseClient } from "@supabase/supabase-js";
-

@@ -2,24 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
-
-
 import { ThemeProvider } from "@acme/ui/theme";
 import { Toaster } from "@acme/ui/toast";
 import { cn } from "@acme/ui/utils";
 
-
-
-
-
-
 import "~/app/globals.css";
-
-
 
 import { Header } from "~/components/layout/header";
 import { TRPCReactProvider } from "~/trpc/react";
-
 
 export const metadata: Metadata = {
   title: "Crypto Tracker",

@@ -10,7 +10,6 @@ import { SkeletonCoinList } from "../skeleton-coin-list";
 import { CoinItem } from "./coin-item";
 import { Pagination } from "./pagination";
 
-
 interface Props {
   initialData: RouterOutputs["coin"]["getTop100Coins"];
   currentPage: number;

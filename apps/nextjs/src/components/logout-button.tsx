@@ -8,7 +8,11 @@ type LogoutButtonProps = ComponentPropsWithoutRef<typeof SubmitButton> & {
   onLogoutSuccess?: () => void;
 };
 
-export function LogoutButton({ className, onLogoutSuccess, ...props }: LogoutButtonProps) {
+export function LogoutButton({
+  className,
+  onLogoutSuccess,
+  ...props
+}: LogoutButtonProps) {
   const [, formAction] = useFormState(async (prevState: null) => {
     await logout();
     onLogoutSuccess?.();
@@ -17,11 +21,7 @@ export function LogoutButton({ className, onLogoutSuccess, ...props }: LogoutBut
 
   return (
     <form action={formAction}>
-      <SubmitButton
-        variant="ghost"
-        className={className}
-        {...props}
-      >
+      <SubmitButton variant="ghost" className={className} {...props}>
         Logout
       </SubmitButton>
     </form>

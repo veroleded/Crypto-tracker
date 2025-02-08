@@ -2,14 +2,11 @@
 
 import { useEffect } from "react";
 
-
-
 import { Container } from "~/components/layout/container";
 import { ErrorMessage } from "~/components/ui/error-message";
 import { api } from "~/trpc/react";
 import { SkeletonCoinList } from "../skeleton-coin-list";
 import { FavoriteItem } from "./favorite-item";
-
 
 export function FavoriteList() {
   const utils = api.useUtils();

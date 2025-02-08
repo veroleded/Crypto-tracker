@@ -1,5 +1,6 @@
-import { updateSession } from "@acme/auth";
 import type { NextRequest } from "next/server";
+
+import { updateSession } from "@acme/auth";
 
 export async function middleware(request: NextRequest) {
   return updateSession(request);
@@ -16,4 +17,4 @@ export const config = {
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
-}; 
+};

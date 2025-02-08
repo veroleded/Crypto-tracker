@@ -1,8 +1,9 @@
 "use server";
 
-import { createClient } from "@acme/auth/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+import { createClient } from "@acme/auth/server";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();

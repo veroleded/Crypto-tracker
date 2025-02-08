@@ -1,9 +1,9 @@
+import type { Purchase } from "./types";
 import { api } from "~/trpc/react";
 import { ProfitSummary } from "./profit-summary";
 import { PurchaseForm } from "./purchase-form";
 import { PurchaseList } from "./purchase-list";
 import { ProfitCalculatorSkeleton } from "./skeleton";
-import type { Purchase } from "./types";
 
 interface ProfitCalculatorProps {
   coinId: string;
@@ -11,7 +11,11 @@ interface ProfitCalculatorProps {
   coinName: string;
 }
 
-export function ProfitCalculator({ currentPrice, coinName, coinId }: ProfitCalculatorProps) {
+export function ProfitCalculator({
+  currentPrice,
+  coinName,
+  coinId,
+}: ProfitCalculatorProps) {
   const utils = api.useUtils();
 
   // Fetch purchases from the database
@@ -68,7 +72,9 @@ export function ProfitCalculator({ currentPrice, coinName, coinId }: ProfitCalcu
 
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-sm">
-      <h2 className="text-2xl font-bold text-white">Profit Calculator for {coinName}</h2>
+      <h2 className="text-2xl font-bold text-white">
+        Profit Calculator for {coinName}
+      </h2>
 
       <PurchaseForm
         onSubmit={(data) => {
@@ -80,13 +86,15 @@ export function ProfitCalculator({ currentPrice, coinName, coinId }: ProfitCalcu
         isSubmitting={status === "pending"}
       />
 
-      {purchases && <PurchaseList
-        purchases={purchases}
-        coinName={coinName}
-        onDelete={(id) => deletePurchase({ id })}
-      />}
+      {purchases && (
+        <PurchaseList
+          purchases={purchases}
+          coinName={coinName}
+          onDelete={(id) => deletePurchase({ id })}
+        />
+      )}
 
       {totals && <ProfitSummary data={totals} coinName={coinName} />}
     </div>
   );
-} 
+}

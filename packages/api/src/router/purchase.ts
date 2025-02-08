@@ -15,11 +15,12 @@ export const purchaseRouter = createTRPCRouter({
         coinId: z.string(),
         amount: z.number().positive(),
         purchasePrice: z.number().positive(),
-        purchaseDate: z.string()
+        purchaseDate: z
+          .string()
           .transform((date) => new Date(date))
           .refine(
             (date) => date > MIN_DATE && date < MAX_DATE,
-            "Purchase date must be after January 3, 2009 (Bitcoin's genesis block date)"
+            "Purchase date must be after January 3, 2009 (Bitcoin's genesis block date)",
           ),
       }),
     )
@@ -57,10 +58,7 @@ export const purchaseRouter = createTRPCRouter({
       return ctx.db
         .delete(CoinPurchase)
         .where(
-          and(
-            eq(CoinPurchase.id, input.id),
-            eq(CoinPurchase.userId, userId),
-          ),
+          and(eq(CoinPurchase.id, input.id), eq(CoinPurchase.userId, userId)),
         );
     }),
-}); 
+});

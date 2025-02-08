@@ -1,9 +1,9 @@
 "use client";
 
-import { LogOut, Menu } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { LogOut, Menu } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
 import {
@@ -32,7 +32,8 @@ export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const isAuthPage = pathname === "/sign-in" ||
+  const isAuthPage =
+    pathname === "/sign-in" ||
     pathname === "/sign-up" ||
     pathname === "/error" ||
     pathname.startsWith("/auth");
