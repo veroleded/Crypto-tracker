@@ -11,7 +11,6 @@ const config = {
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@acme/api",
-    "@acme/auth",
     "@acme/db",
     "@acme/ui",
     "@acme/validators",
@@ -20,9 +19,20 @@ const config = {
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
+
+  /** Configure image domains */
   images: {
     remotePatterns: [{ hostname: "**" }],
   },
+
+  /** Disable static generation for client components */
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["localhost:3000"],
+    },
+  },
+  output: "standalone",
+  staticPageGenerationTimeout: 1000,
 };
 
 export default config;

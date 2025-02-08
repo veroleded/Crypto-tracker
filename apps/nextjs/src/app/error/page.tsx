@@ -1,32 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@acme/ui/card";
 import { cn } from "@acme/ui/utils";
-
-const errorMessages: Record<string, string> = {
-  invalid_code: "Invalid authorization code",
-  unexpected_error: "An unexpected error occurred",
-  invalid_credentials: "Invalid email or password",
-  "Token has expired or is invalid":
-    "Verification link has expired or already been used",
-  // Add more error messages as needed
-};
+import { ErrorContent } from "~/components/error-content";
 
 export default function ErrorPage() {
-  const searchParams = useSearchParams();
-  const message = searchParams.get("message");
-
-  const displayMessage = useMemo(
-    () => (message ? (errorMessages[message] ?? message) : "An error occurred"),
-    [message],
-  );
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 md:mt-16">
       <Card
@@ -46,7 +29,9 @@ export default function ErrorPage() {
           </h1>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground">{displayMessage}</p>
+          <Suspense fallback={<p className="text-center text-muted-foreground">Loading...</p>}>
+            <ErrorContent />
+          </Suspense>
         </CardContent>
         <CardFooter>
           <Button

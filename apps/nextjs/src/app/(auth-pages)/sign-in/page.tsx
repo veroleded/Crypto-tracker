@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 
 import {
@@ -77,7 +78,9 @@ export default function SignInPage() {
             >
               Sign in
             </SubmitButton>
-            <FormError />
+            <Suspense fallback={null}>
+              <FormError />
+            </Suspense>
             <div className="m-auto mt-2 text-sm text-muted-foreground">
               Don't have an account?{" "}
               <Link

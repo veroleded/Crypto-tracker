@@ -1,5 +1,8 @@
+import { Suspense } from "react";
+
 import { CoinList } from "~/components/coins/coin-list";
 import { PageHeader } from "~/components/layout/page-header";
+import { SkeletonCoinList } from "~/components/coins/skeleton-coin-list";
 
 export default function HomePage() {
   return (
@@ -9,7 +12,9 @@ export default function HomePage() {
         description="Track real-time prices, market cap, and trading volume of the top cryptocurrencies"
       />
       <div className="mt-8">
-        <CoinList />
+        <Suspense fallback={<SkeletonCoinList />}>
+          <CoinList />
+        </Suspense>
       </div>
     </div>
   );
