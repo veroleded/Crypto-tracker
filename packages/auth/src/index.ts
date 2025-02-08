@@ -1,15 +1,12 @@
-import NextAuth from "next-auth";
+// Client exports
+export { createClient as createClientBrowser } from "./client";
 
-import { authConfig } from "./config";
+// Server exports
+export { createClient as createClientServer } from "./server";
 
-export type { Session } from "next-auth";
+// Middleware exports
+export { updateSession } from "./middleware";
 
-const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+// Types
+export type { SupabaseClient } from "@supabase/supabase-js";
 
-export { auth, handlers, signIn, signOut };
-
-export {
-  invalidateSessionToken,
-  isSecureContext,
-  validateToken,
-} from "./config";

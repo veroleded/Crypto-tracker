@@ -1,12 +1,30 @@
-# create-t3-turbo
+# Create T3 App
 
-> [!NOTE]
->
-> NextAuth setup now works for Expo app!
+This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
 
-> [!NOTE]
->
-> OAuth deployments are now working for preview deployments. Read [deployment guide](https://github.com/t3-oss/create-t3-turbo#auth-proxy) and [check out the source](./apps/auth-proxy) to learn more!
+## What's inside?
+
+This turborepo uses [pnpm](https://pnpm.io) as a package manager. It includes the following packages/apps:
+
+### Apps and Packages
+
+- `nextjs`: a [Next.js](https://nextjs.org/) app
+- `@acme/api`: an API package powered by [tRPC](https://trpc.io/)
+- `@acme/auth`: authentication using [Supabase Auth](https://supabase.com/auth)
+- `@acme/db`: database package using [Drizzle](https://orm.drizzle.team/)
+- `@acme/ui`: a React component library shared by applications
+- `@acme/validators`: validation library using [Zod](https://zod.dev/)
+- `@acme/eslint-config`: ESLint configurations
+- `@acme/prettier-config`: Prettier configurations
+- `@acme/typescript-config`: TypeScript configurations
+
+### Utilities
+
+This turborepo has some additional tools already setup for you:
+
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
 
 ## Installation
 
@@ -216,52 +234,4 @@ Deploying your Expo application works slightly differently compared to Next.js o
    eas build:configure
    ```
 
-3. After the initial setup, you can create your first build. You can build for Android and iOS platforms and use different [`eas.json` build profiles](https://docs.expo.dev/build-reference/eas-json) to create production builds or development, or test builds. Let's make a production build for iOS.
-
-   ```bash
-   eas build --platform ios --profile production
-   ```
-
-   > If you don't specify the `--profile` flag, EAS uses the `production` profile by default.
-
-4. Now that you have your first production build, you can submit this to the stores. [EAS Submit](https://docs.expo.dev/submit/introduction) can help you send the build to the stores.
-
-   ```bash
-   eas submit --platform ios --latest
-   ```
-
-   > You can also combine build and submit in a single command, using `eas build ... --auto-submit`.
-
-5. Before you can get your app in the hands of your users, you'll have to provide additional information to the app stores. This includes screenshots, app information, privacy policies, etc. _While still in preview_, [EAS Metadata](https://docs.expo.dev/eas/metadata) can help you with most of this information.
-
-6. Once everything is approved, your users can finally enjoy your app. Let's say you spotted a small typo; you'll have to create a new build, submit it to the stores, and wait for approval before you can resolve this issue. In these cases, you can use EAS Update to quickly send a small bugfix to your users without going through this long process. Let's start by setting up EAS Update.
-
-   The steps below summarize the [Getting started with EAS Update](https://docs.expo.dev/eas-update/getting-started/#configure-your-project) guide.
-
-   ```bash
-   # Add the `expo-updates` library to your Expo app
-   cd apps/expo
-   pnpm expo install expo-updates
-
-   # Configure EAS Update
-   eas update:configure
-   ```
-
-7. Before we can send out updates to your app, you have to create a new build and submit it to the app stores. For every change that includes native APIs, you have to rebuild the app and submit the update to the app stores. See steps 2 and 3.
-
-8. Now that everything is ready for updates, let's create a new update for `production` builds. With the `--auto` flag, EAS Update uses your current git branch name and commit message for this update. See [How EAS Update works](https://docs.expo.dev/eas-update/how-eas-update-works/#publishing-an-update) for more information.
-
-   ```bash
-   cd apps/expo
-   eas update --auto
-   ```
-
-   > Your OTA (Over The Air) updates must always follow the app store's rules. You can't change your app's primary functionality without getting app store approval. But this is a fast way to update your app for minor changes and bug fixes.
-
-9. Done! Now that you have created your production build, submitted it to the stores, and installed EAS Update, you are ready for anything!
-
-## References
-
-The stack originates from [create-t3-app](https://github.com/t3-oss/create-t3-app).
-
-A [blog post](https://jumr.dev/blog/t3-turbo) where I wrote how to migrate a T3 app into this.
+3. After the initial setup, you can create your first build. You can build for Android and iOS platforms and use different [`

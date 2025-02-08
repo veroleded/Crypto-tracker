@@ -1,8 +1,9 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
-import type { NextRequest } from "next/server";
 import { redirect } from "next/navigation";
+import type { NextRequest } from "next/server";
 
-import { createClient } from "~/utils/supabase/server";
+import { createClientServer } from "@acme/auth";
+
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,19 +12,16 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get("next") ?? "/";
 
   if (token_hash && type) {
-    const supabase = await createClient();
+    const supabase = await createClientServer();
 
     const { error } = await supabase.auth.verifyOtp({
       type,
       token_hash,
     });
     if (!error) {
-      // redirect user to specified redirect URL or root of app
-      redirect(next);
+      return redirect(next);
     }
-    redirect(`/error?message=${error.message}`);
+    return redirect(`/error?message=${error.message}`);
   }
-  redirect("/error?message=unexpected_error");
-
-  // redirect the user to an error page with some instructions
+  return redirect("/error?message=unexpected_error");
 }

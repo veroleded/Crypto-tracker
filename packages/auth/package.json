@@ -4,37 +4,35 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "react-server": "./src/index.rsc.ts",
-      "default": "./src/index.ts"
-    },
-    "./env": "./env.ts"
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts",
+    "./middleware": "./src/middleware.ts"
   },
   "license": "MIT",
   "scripts": {
-    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean": "rm -rf .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/db": "workspace:*",
-    "@auth/core": "0.37.2",
-    "@auth/drizzle-adapter": "1.7.4",
-    "@t3-oss/env-nextjs": "^0.12.0",
-    "next": "^14.2.23",
-    "next-auth": "5.0.0-beta.25",
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18",
-    "zod": "catalog:"
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.48.1",
+    "next": "^14.2.23"
   },
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:"
+    "@types/node": "^22.10.10",
+    "eslint": "^8.47.0",
+    "typescript": "^5.1.6"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@acme/eslint-config/base"
+    ]
   },
   "prettier": "@acme/prettier-config"
 }
