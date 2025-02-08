@@ -12,23 +12,16 @@ export const favoriteRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Проверяем, не добавлена ли уже монета
-      const existing = await ctx.db.query.Favorite.findFirst({
-        where: and(
-          eq(Favorite.userId, userId),
-          eq(Favorite.coinId, input.coinId),
-        ),
-      });
-
-      if (existing) {
-        throw new Error("Монета уже в избранном");
-      }
-
-      // Добавляем монету в избранное
-      return ctx.db.insert(Favorite).values({
-        userId,
-        coinId: input.coinId,
-      });
+      // Добавляем монету в избранное, игнорируя дубликаты
+      return ctx.db
+        .insert(Favorite)
+        .values({
+          userId,
+          coinId: input.coinId,
+        })
+        .onConflictDoNothing({
+          target: [Favorite.userId, Favorite.coinId],
+        });
     }),
 
   // Удалить монету из избранного
@@ -53,6 +46,7 @@ export const favoriteRouter = createTRPCRouter({
       columns: {
         coinId: true,
       },
+      orderBy: [Favorite.createdAt],
     });
 
     return {

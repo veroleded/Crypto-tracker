@@ -10,7 +10,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["user"]["Row"], "created_at" | "updated_at">;
+        Insert: Omit<
+          Database["public"]["Tables"]["user"]["Row"],
+          "created_at" | "updated_at"
+        >;
       };
       favorite: {
         Row: {
@@ -20,9 +23,12 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["favorite"]["Row"], "id" | "created_at" | "updated_at">;
+        Insert: Omit<
+          Database["public"]["Tables"]["favorite"]["Row"],
+          "id" | "created_at" | "updated_at"
+        >;
       };
       // Другие таблицы...
     };
   };
-} 
+}

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 
 import { CoinList } from "~/components/coins/coin-list";
-import { PageHeader } from "~/components/layout/page-header";
 import { SkeletonCoinList } from "~/components/coins/skeleton-coin-list";
+import { PageHeader } from "~/components/layout/page-header";
 
 export default function HomePage() {
   return (

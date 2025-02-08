@@ -2,24 +2,29 @@
 
 import { useEffect } from "react";
 
-
-
 import { Container } from "~/components/layout/container";
 import { ErrorMessage } from "~/components/ui/error-message";
 import { api } from "~/trpc/react";
 import { SkeletonCoinList } from "../skeleton-coin-list";
 import { FavoriteItem } from "./favorite-item";
 
-
 export function FavoriteList() {
   const utils = api.useUtils();
 
-  const { data: favoritesData, isLoading: isLoadingFavorites } =
-    api.favorite.getAll.useQuery(undefined, {
-      refetchInterval: 30000,
-      staleTime: 20000,
-      gcTime: 1000 * 60 * 5,
-    });
+  const {
+    data: favoritesData,
+    isLoading: isLoadingFavorites,
+    error: favoritesError,
+  } = api.favorite.getAll.useQuery(undefined, {
+    refetchInterval: 1 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  });
 
   const ids = favoritesData?.favorites.map((v) => v.coinId) ?? [];
 
@@ -32,28 +37,38 @@ export function FavoriteList() {
     {
       enabled: ids.length > 0,
       placeholderData: (prev) => prev,
-      refetchInterval: 30000,
-      staleTime: 20000,
-      gcTime: 1000 * 60 * 5,
+      refetchInterval: 2 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: false,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
     },
   );
 
   useEffect(() => {
     return () => {
       void utils.favorite.getAll.reset();
-      void utils.coin.getByIds.reset();
     };
   }, [utils]);
 
-  if (isLoadingFavorites || (isLoadingCoins && !coinsData)) {
+  if (isLoadingFavorites || isLoadingCoins) {
     return <SkeletonCoinList />;
   }
 
   if (error) {
     return (
+      <ErrorMessage title="Failed to load favorites" message={error.message} />
+    );
+  }
+
+  if (favoritesError) {
+    return (
       <ErrorMessage
         title="Failed to load favorites"
-        message="There was an error loading your favorite coins. Please try again later."
+        message={favoritesError.message}
       />
     );
   }

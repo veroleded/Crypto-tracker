@@ -1,13 +1,18 @@
-import { Button } from "@acme/ui/button";
-import { Loader2 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
+
+import { Button } from "@acme/ui/button";
 
 const MAX_DATE = "9999-12-31";
 const MIN_DATE = "2009-01-03";
 
 interface PurchaseFormProps {
-  onSubmit: (data: { amount: number; purchasePrice: number; purchaseDate: string; }) => void;
+  onSubmit: (data: {
+    amount: number;
+    purchasePrice: number;
+    purchaseDate: string;
+  }) => void;
   isSubmitting: boolean;
 }
 
@@ -38,7 +43,10 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
     });
   };
 
-  const handleNumberInput = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: string) => void) => {
+  const handleNumberInput = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (value: string) => void,
+  ) => {
     const value = e.target.value;
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
       setter(value);
@@ -64,7 +72,10 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="purchasePrice" className="text-sm font-medium text-gray-300">
+        <label
+          htmlFor="purchasePrice"
+          className="text-sm font-medium text-gray-300"
+        >
           Purchase Price (USD)
         </label>
         <input
@@ -80,7 +91,10 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="purchaseDate" className="text-sm font-medium text-gray-300">
+        <label
+          htmlFor="purchaseDate"
+          className="text-sm font-medium text-gray-300"
+        >
           Purchase Date
         </label>
         <input
@@ -98,7 +112,7 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full h-12 text-base bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300"
+        className="h-12 w-full bg-blue-600 text-base text-white transition-all duration-300 hover:bg-blue-700"
         size="lg"
         variant="primary"
       >
@@ -113,4 +127,4 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
       </Button>
     </form>
   );
-} 
+}

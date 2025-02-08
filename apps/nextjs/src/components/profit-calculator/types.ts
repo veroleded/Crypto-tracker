@@ -11,4 +11,4 @@ export interface ProfitCalculation {
   totalProfit: number;
   profitPercentage: number;
   totalCoins: number;
-} 
+}

@@ -17,26 +17,57 @@ export function CoinList() {
   const { page, handlePageChange } = usePagination();
   const utils = api.useUtils();
 
-  const { data, isLoading, isError } = api.coin.getTop100Coins.useQuery({
-    page,
-    perPage: ITEMS_PER_PAGE,
-  });
+  const { data, isLoading, isError, error } = api.coin.getTop100Coins.useQuery(
+    {
+      page,
+      perPage: ITEMS_PER_PAGE,
+    },
+    {
+      staleTime: 1 * 60 * 1000,
+      gcTime: 1 * 60 * 1000,
+      refetchInterval: 5 * 60 * 1000,
+      retry: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: true,
+    },
+  );
 
-  const prefetchNextPage = useCallback(() => {
-    if (page < MAX_PAGES) {
-      void utils.coin.getTop100Coins.prefetch({
-        page: page + 1,
-        perPage: ITEMS_PER_PAGE,
-      });
-    }
-  }, [page, utils]);
+  // Оптимизированная предзагрузка следующей страницы
+  const prefetchNextPage = useCallback(
+    (nextPage: number) => {
+      if (nextPage >= 1 && nextPage <= MAX_PAGES) {
+        void utils.coin.getTop100Coins.prefetch(
+          {
+            page: nextPage,
+            perPage: ITEMS_PER_PAGE,
+          },
+          {
+            staleTime: 5 * 60 * 1000,
+          },
+        );
+      }
+    },
+    [utils],
+  );
+
+  // Обработчик изменения страницы с предзагрузкой
+  const handlePageChangeWithPrefetch = useCallback(
+    (newPage: number) => {
+      handlePageChange(newPage);
+      // Предзагружаем следующую страницу с задержкой
+      setTimeout(() => {
+        prefetchNextPage(newPage + 1);
+      }, 100);
+    },
+    [handlePageChange, prefetchNextPage],
+  );
 
   useEffect(() => {
-    prefetchNextPage();
     return () => {
       void utils.coin.getTop100Coins.reset();
     };
-  }, [prefetchNextPage, utils]);
+  }, [utils]);
 
   const totalPages = useMemo(
     () => (data ? Math.ceil(data.totalCoins / ITEMS_PER_PAGE) : 0),
@@ -51,7 +82,10 @@ export function CoinList() {
     return (
       <ErrorMessage
         title="Failed to load coins"
-        message="There was an error loading the cryptocurrency list. Please try again later."
+        message={
+          error?.message ??
+          "There was an error loading the cryptocurrency list. Please try again later."
+        }
       />
     );
   }
@@ -74,7 +108,7 @@ export function CoinList() {
         <Pagination
           currentPage={page}
           totalPages={totalPages}
-          onPageChange={handlePageChange}
+          onPageChange={handlePageChangeWithPrefetch}
         />
       </div>
     </Container>

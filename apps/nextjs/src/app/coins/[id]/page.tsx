@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { CoinDetails } from "~/components/coins/coin-details";
+import { ErrorMessage } from "~/components/ui/error-message";
 import { api } from "~/trpc/server";
 
 interface Props {
@@ -10,15 +11,30 @@ interface Props {
 }
 
 export default async function CoinPage({ params }: Props) {
-  const coin = await api.coin.getDetailsById(params.id);
+  try {
+    const coin = await api.coin.getDetailsById(params.id);
 
-  if (!coin) {
-    notFound();
+    if (!coin) {
+      notFound();
+    }
+
+    return (
+      <div className="mt-16 flex flex-col gap-6 p-4">
+        <CoinDetails coin={coin} />
+      </div>
+    );
+  } catch (error) {
+    return (
+      <div className="mt-16 flex flex-col gap-6 p-4">
+        <ErrorMessage
+          title="Failed to load coin details"
+          message={
+            error instanceof Error
+              ? error.message
+              : "There was an error loading the coin details. Please try again later."
+          }
+        />
+      </div>
+    );
   }
-
-  return (
-    <div className="mt-16 flex flex-col gap-6 p-4">
-      <CoinDetails coin={coin} />
-    </div>
-  );
 }

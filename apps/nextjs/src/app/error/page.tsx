@@ -7,6 +7,7 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@acme/ui/card";
 import { cn } from "@acme/ui/utils";
+
 import { ErrorContent } from "~/components/error-content";
 
 export default function ErrorPage() {
@@ -29,7 +30,11 @@ export default function ErrorPage() {
           </h1>
         </CardHeader>
         <CardContent>
-          <Suspense fallback={<p className="text-center text-muted-foreground">Loading...</p>}>
+          <Suspense
+            fallback={
+              <p className="text-center text-muted-foreground">Loading...</p>
+            }
+          >
             <ErrorContent />
           </Suspense>
         </CardContent>
