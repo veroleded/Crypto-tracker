@@ -1,51 +1,74 @@
 import { createServerClient } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  try {
+  // Create a response object to modify
+    const response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name, value, options) {
-          request.cookies.set({ name, value, ...options });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name, options) {
-          request.cookies.set({ name, value: '', ...options });
-          response.cookies.set({ name, value: '', ...options });
+    // Create supabase server client
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name, value, options) {
+            request.cookies.set({ name, value, ...options });
+            response.cookies.set({ name, value, ...options });
+          },
+          remove(name, options) {
+            request.cookies.set({ name, value: "", ...options });
+            response.cookies.set({ name, value: "", ...options });
+          },
         },
       },
-    },
-  );
+    );
 
-  const { data: { user } } = await supabase.auth.getUser();
-  const url = new URL(request.url);
-  const isAuthPage = url.pathname.startsWith('/sign-in') || 
-                    url.pathname.startsWith('/sign-up') || 
-                    url.pathname.startsWith('/auth/');
+    // Refresh session if expired
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      throw sessionError;
+    }
 
-  // Если пользователь авторизован и пытается зайти на страницы auth
-  if (user && isAuthPage) {
-    return NextResponse.redirect(new URL('/', request.url));
+    // Get URL information
+    const url = new URL(request.url);
+    const isAuthPage = url.pathname.startsWith("/sign-in") ||
+      url.pathname.startsWith("/sign-up") ||
+      url.pathname.startsWith("/auth/");
+    const isPublicRoute = url.pathname === "/error" ||
+      url.pathname.startsWith("/_next") ||
+      url.pathname.startsWith("/static") ||
+      url.pathname.startsWith("/api/trpc");
+
+    // Handle authentication routing
+    if (session) {
+      // Logged in users shouldn't access auth pages
+      if (isAuthPage) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    } else {
+      // Non-logged in users can only access public routes and auth pages
+      if (!isAuthPage && !isPublicRoute) {
+        const redirectUrl = new URL("/sign-in", request.url);
+        redirectUrl.searchParams.set("redirect", url.pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
+
+    return response;
+  } catch (error) {
+    // If there's an error, redirect to error page
+    console.error("Middleware error:", error);
+    return NextResponse.redirect(new URL("/error", request.url));
   }
-
-  // Если пользователь не авторизован и пытается зайти на любую страницу кроме auth
-  if (!user && !isAuthPage && url.pathname !== '/error' && !url.pathname.startsWith('/auth')) {
-    const redirectUrl = new URL('/sign-in', request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  return response;
 }
 
 export const config = {
@@ -56,8 +79,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public (public files)
-     * - api (API routes)
      */
-    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 };
