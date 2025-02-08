@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import type { CoinDetails as CoinDetailsType } from "@acme/api";
+import { ProfitCalculator } from "~/components/profit-calculator/profit-calculator";
 
 import { CoinDescription } from "./coin-description";
 import { CoinHeader } from "./coin-header";
@@ -19,10 +20,19 @@ export function CoinDetails({ coin }: Props) {
     () => [
       { id: "price", Component: CoinPrice },
       { id: "stats", Component: CoinStats },
+      {
+        id: "calculator", Component: () => (
+          <ProfitCalculator
+            coinId={coin.id}
+            currentPrice={coin.market_data.current_price.usd}
+            coinName={coin.name}
+          />
+        )
+      },
       { id: "description", Component: CoinDescription },
       { id: "links", Component: CoinLinks },
     ],
-    [],
+    [coin.id, coin.market_data.current_price.usd, coin.name],
   );
 
   return (
