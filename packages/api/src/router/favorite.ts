@@ -13,7 +13,8 @@ export const favoriteRouter = createTRPCRouter({
       const userId = ctx.user.id;
 
       // Добавляем монету в избранное, игнорируя дубликаты
-      return ctx.db.insert(Favorite)
+      return ctx.db
+        .insert(Favorite)
         .values({
           userId,
           coinId: input.coinId,

@@ -22,4 +22,4 @@ export function ErrorContent() {
   );
 
   return <p className="text-center text-muted-foreground">{displayMessage}</p>;
-} 
+}

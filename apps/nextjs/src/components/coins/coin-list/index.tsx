@@ -17,24 +17,23 @@ export function CoinList() {
   const { page, handlePageChange } = usePagination();
   const utils = api.useUtils();
 
-  const { data, isLoading, isError } = api.coin.getTop100Coins.useQuery(
+  const { data, isLoading, isError, error } = api.coin.getTop100Coins.useQuery(
     {
       page,
       perPage: ITEMS_PER_PAGE,
     },
     {
-      staleTime: 2 * 60 * 1000, // Данные считаются свежими 2 минуты
-      gcTime: 10 * 60 * 1000, // Хранить неиспользуемые данные 10 минут
-      refetchInterval: 2 * 60 * 1000, // Обновлять каждые 2 минуты
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 1 * 60 * 1000,
+      gcTime: 1 * 60 * 1000,
+      refetchInterval: 5 * 60 * 1000,
+      retry: false,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
-      refetchOnMount: false,
+      refetchOnMount: true,
     },
   );
 
-  // Предзагрузка только при явном переходе на страницу
+  // Оптимизированная предзагрузка следующей страницы
   const prefetchNextPage = useCallback(
     (nextPage: number) => {
       if (nextPage >= 1 && nextPage <= MAX_PAGES) {
@@ -44,7 +43,7 @@ export function CoinList() {
             perPage: ITEMS_PER_PAGE,
           },
           {
-            staleTime: 2 * 60 * 1000,
+            staleTime: 5 * 60 * 1000,
           },
         );
       }
@@ -56,8 +55,10 @@ export function CoinList() {
   const handlePageChangeWithPrefetch = useCallback(
     (newPage: number) => {
       handlePageChange(newPage);
-      // Предзагружаем следующую страницу только после явного перехода
-      prefetchNextPage(newPage + 1);
+      // Предзагружаем следующую страницу с задержкой
+      setTimeout(() => {
+        prefetchNextPage(newPage + 1);
+      }, 100);
     },
     [handlePageChange, prefetchNextPage],
   );
@@ -73,7 +74,7 @@ export function CoinList() {
     [data],
   );
 
-  if (isLoading && !data) {
+  if (isLoading) {
     return <SkeletonCoinList />;
   }
 
@@ -81,7 +82,10 @@ export function CoinList() {
     return (
       <ErrorMessage
         title="Failed to load coins"
-        message="There was an error loading the cryptocurrency list. Please try again later."
+        message={
+          error?.message ??
+          "There was an error loading the cryptocurrency list. Please try again later."
+        }
       />
     );
   }

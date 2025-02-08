@@ -28,7 +28,11 @@ export default async function CoinPage({ params }: Props) {
       <div className="mt-16 flex flex-col gap-6 p-4">
         <ErrorMessage
           title="Failed to load coin details"
-          message={error instanceof Error ? error.message : "There was an error loading the coin details. Please try again later."}
+          message={
+            error instanceof Error
+              ? error.message
+              : "There was an error loading the coin details. Please try again later."
+          }
         />
       </div>
     );

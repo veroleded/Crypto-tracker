@@ -1,10 +1,10 @@
-import { createServerClient } from "@supabase/ssr";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
   try {
-  // Create a response object to modify
+    // Create a response object to modify
     const response = NextResponse.next({
       request: {
         headers: request.headers,
@@ -33,17 +33,22 @@ export async function middleware(request: NextRequest) {
     );
 
     // Refresh session if expired
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     if (sessionError) {
       throw sessionError;
     }
 
     // Get URL information
     const url = new URL(request.url);
-    const isAuthPage = url.pathname.startsWith("/sign-in") ||
+    const isAuthPage =
+      url.pathname.startsWith("/sign-in") ||
       url.pathname.startsWith("/sign-up") ||
       url.pathname.startsWith("/auth/");
-    const isPublicRoute = url.pathname === "/error" ||
+    const isPublicRoute =
+      url.pathname === "/error" ||
       url.pathname.startsWith("/_next") ||
       url.pathname.startsWith("/static") ||
       url.pathname.startsWith("/api/trpc");

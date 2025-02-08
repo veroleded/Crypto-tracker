@@ -4,7 +4,6 @@ import { favoriteRouter } from "./router/favorite";
 import { purchaseRouter } from "./router/purchase";
 import { createTRPCRouter } from "./trpc";
 
-
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   coin: coinRouter,

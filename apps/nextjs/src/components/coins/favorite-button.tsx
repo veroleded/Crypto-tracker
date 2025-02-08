@@ -1,7 +1,7 @@
 "use client";
 
-import { Heart, Loader2 } from "lucide-react";
 import { useCallback, useMemo } from "react";
+import { Heart, Loader2 } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
 
@@ -52,7 +52,9 @@ export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
   }, [utils]);
 
   const handleMutationError = useCallback(
-    (context: { favorites: { favorites: { coinId: string; }[]; }; } | undefined) => {
+    (
+      context: { favorites: { favorites: { coinId: string }[] } } | undefined,
+    ) => {
       if (context) {
         utils.favorite.getAll.setData(undefined, context.favorites);
       }

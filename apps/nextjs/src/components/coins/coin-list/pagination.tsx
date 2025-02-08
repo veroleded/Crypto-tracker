@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-
-
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 import { Button } from "@acme/ui/button";
-
-
-
-
 
 interface Props {
   currentPage: number;

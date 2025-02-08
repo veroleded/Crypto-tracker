@@ -11,17 +11,20 @@ import { FavoriteItem } from "./favorite-item";
 export function FavoriteList() {
   const utils = api.useUtils();
 
-  const { data: favoritesData, isLoading: isLoadingFavorites, error: favoritesError } =
-    api.favorite.getAll.useQuery(undefined, {
-      refetchInterval: 1 * 60 * 1000, // Обновлять каждые 1 минуту
-      staleTime: 1 * 60 * 1000, // Данные считаются свежими 1 минуту
-      gcTime: 10 * 60 * 1000, // Хранить неиспользуемые данные 10 минут
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      refetchOnMount: false,
-    });
+  const {
+    data: favoritesData,
+    isLoading: isLoadingFavorites,
+    error: favoritesError,
+  } = api.favorite.getAll.useQuery(undefined, {
+    refetchInterval: 1 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  });
 
   const ids = favoritesData?.favorites.map((v) => v.coinId) ?? [];
 
@@ -37,7 +40,7 @@ export function FavoriteList() {
       refetchInterval: 2 * 60 * 1000,
       staleTime: 2 * 60 * 1000,
       gcTime: 10 * 60 * 1000,
-      retry: 2,
+      retry: false,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -48,20 +51,16 @@ export function FavoriteList() {
   useEffect(() => {
     return () => {
       void utils.favorite.getAll.reset();
-      void utils.coin.getByIds.reset();
     };
   }, [utils]);
 
-  if (isLoadingFavorites || (isLoadingCoins && !coinsData)) {
+  if (isLoadingFavorites || isLoadingCoins) {
     return <SkeletonCoinList />;
   }
 
   if (error) {
     return (
-      <ErrorMessage
-        title="Failed to load favorites"
-        message={error.message}
-      />
+      <ErrorMessage title="Failed to load favorites" message={error.message} />
     );
   }
 

@@ -32,12 +32,12 @@ export function ProfitCalculatorSkeleton() {
               key={i}
               className="flex items-center justify-between rounded-md border border-gray-700 bg-gray-700 p-4"
             >
-              <div className="space-y-1 flex-1">
+              <div className="flex-1 space-y-1">
                 <Skeleton className="h-4 w-2/3" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-3 w-1/3" />
               </div>
-              <Skeleton className="h-8 w-20 ml-4" />
+              <Skeleton className="ml-4 h-8 w-20" />
             </div>
           ))}
         </div>
@@ -48,7 +48,10 @@ export function ProfitCalculatorSkeleton() {
         <Skeleton className="h-6 w-32" />
         <div className="mt-4 space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex justify-between items-center border-b border-gray-600 pb-3">
+            <div
+              key={i}
+              className="flex items-center justify-between border-b border-gray-600 pb-3"
+            >
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-32" />
             </div>
@@ -57,4 +60,4 @@ export function ProfitCalculatorSkeleton() {
       </div>
     </div>
   );
-} 
+}
