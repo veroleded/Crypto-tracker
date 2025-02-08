@@ -1,11 +1,9 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-
-
 
 import { Button } from "@acme/ui/button";
 import {
@@ -23,7 +21,7 @@ import {
 } from "@acme/ui/sheet";
 import { cn } from "@acme/ui/utils";
 
-import { LogoutButton } from "~/components/logout-button";
+import { logout } from "~/actions/auth";
 
 const navigation = [
   { name: "Top 100 Coins", href: "/" },
@@ -33,6 +31,11 @@ const navigation = [
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  const isAuthPage = pathname === "/sign-in" ||
+    pathname === "/sign-up" ||
+    pathname === "/error" ||
+    pathname.startsWith("/auth");
 
   const Logo = () => (
     <Link
@@ -75,14 +78,14 @@ export function Header() {
           </NavigationMenuItem>
         ))}
         <NavigationMenuItem>
-          <LogoutButton
-            className={cn(
-              "h-9",
-              "font-normal",
-              "text-muted-foreground hover:text-foreground",
-              "transition-all duration-200",
-            )}
-          />
+          <Button
+            variant="ghost"
+            className="text-red-500 hover:text-red-600"
+            onClick={() => void logout()}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
@@ -117,15 +120,17 @@ export function Header() {
             ))}
           </div>
           <div className="my-6 h-px bg-border" />
-          <LogoutButton
-            className={cn(
-              "h-11 w-full",
-              "justify-start font-normal",
-              "text-muted-foreground hover:text-foreground",
-              "transition-all duration-200",
-            )}
-            onLogoutSuccess={() => setOpen(false)}
-          />
+          <Button
+            variant="ghost"
+            className="h-11 w-full justify-start font-normal text-red-500 hover:text-red-600"
+            onClick={() => {
+              void logout();
+              setOpen(false);
+            }}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </nav>
       </SheetContent>
     </Sheet>
@@ -135,12 +140,11 @@ export function Header() {
     <header className="fixed top-0 z-50 w-full border-b bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Logo />
-        {pathname !== "/sign-in" && pathname !== "/sign-up" && (
+        {!isAuthPage && (
           <>
             <div className="hidden md:block">
               <DesktopNav />
             </div>
-
             <div className="md:hidden">
               <MobileNav />
             </div>
