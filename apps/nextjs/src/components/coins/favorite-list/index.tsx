@@ -2,23 +2,22 @@
 
 import { useEffect } from "react";
 
-
-
 import { Container } from "~/components/layout/container";
 import { ErrorMessage } from "~/components/ui/error-message";
 import { api } from "~/trpc/react";
 import { SkeletonCoinList } from "../skeleton-coin-list";
 import { FavoriteItem } from "./favorite-item";
 
-
 export function FavoriteList() {
   const utils = api.useUtils();
 
   const { data: favoritesData, isLoading: isLoadingFavorites } =
     api.favorite.getAll.useQuery(undefined, {
-      refetchInterval: 30000,
-      staleTime: 20000,
-      gcTime: 1000 * 60 * 5,
+      refetchInterval: 30000, // 30 seconds
+      staleTime: 20000, // Consider data fresh for 20 seconds
+      gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+      retry: 3, // Retry failed requests 3 times
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     });
 
   const ids = favoritesData?.favorites.map((v) => v.coinId) ?? [];
@@ -34,7 +33,10 @@ export function FavoriteList() {
       placeholderData: (prev) => prev,
       refetchInterval: 30000,
       staleTime: 20000,
-      gcTime: 1000 * 60 * 5,
+      gcTime: 5 * 60 * 1000,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+
     },
   );
 
