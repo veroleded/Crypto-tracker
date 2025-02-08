@@ -16,7 +16,9 @@ export function FavoriteList() {
 
   const { data: favoritesData, isLoading: isLoadingFavorites } =
     api.favorite.getAll.useQuery(undefined, {
-      refetchInterval: 1000,
+      refetchInterval: 30000,
+      staleTime: 20000,
+      gcTime: 1000 * 60 * 5,
     });
 
   const ids = favoritesData?.favorites.map((v) => v.coinId) ?? [];
@@ -30,6 +32,9 @@ export function FavoriteList() {
     {
       enabled: ids.length > 0,
       placeholderData: (prev) => prev,
+      refetchInterval: 30000,
+      staleTime: 20000,
+      gcTime: 1000 * 60 * 5,
     },
   );
 

@@ -10,11 +10,61 @@ const COINGECKO_HEADERS = {
   Accept: "application/json",
 };
 
+// Cache configuration
+const CACHE_DURATION = {
+  TOP_100: 30 * 1000, // 30 seconds for top 100 coins
+  COIN_DETAILS: 60 * 1000, // 1 minute for coin details
+};
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const cache = new Map<string, CacheEntry<unknown>>();
+
+function getCacheKey(path: string, params: Record<string, string | number>): string {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    searchParams.append(key, String(value));
+  }
+  return `${path}?${searchParams.toString()}`;
+}
+
+function getFromCache<T>(key: string, duration: number): T | null {
+  const entry = cache.get(key) as CacheEntry<T> | undefined;
+  if (!entry) return null;
+
+  const isExpired = Date.now() - entry.timestamp > duration;
+  if (isExpired) {
+    cache.delete(key);
+    return null;
+  }
+
+  return entry.data;
+}
+
+function setCache<T>(key: string, data: T): void {
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
+  });
+}
+
 async function fetchFromApi<T>(
   path: string,
   params: Record<string, string | number>,
   schema: z.ZodType<T>,
-) {
+  cacheDuration?: number,
+): Promise<T> {
+  // Try to get from cache if duration is specified
+  if (cacheDuration) {
+    const cacheKey = getCacheKey(path, params);
+    const cachedData = getFromCache<T>(cacheKey, cacheDuration);
+    if (cachedData) return cachedData;
+  }
+
+  // Fetch from API if not in cache or cache expired
   const queryParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     queryParams.append(key, String(value));
@@ -47,6 +97,12 @@ async function fetchFromApi<T>(
       code: "INTERNAL_SERVER_ERROR",
       message: "Invalid data format from API",
     });
+  }
+
+  // Cache the validated data if duration is specified
+  if (cacheDuration) {
+    const cacheKey = getCacheKey(path, params);
+    setCache(cacheKey, validatedData.data);
   }
 
   return validatedData.data;
@@ -162,6 +218,7 @@ export const coinRouter = createTRPCRouter({
           sparkline: "false",
         },
         z.array(coinSchema),
+        CACHE_DURATION.TOP_100,
       );
 
       return {
@@ -185,6 +242,7 @@ export const coinRouter = createTRPCRouter({
             sparkline: "false",
           },
           coinDetailsSchema,
+          CACHE_DURATION.COIN_DETAILS,
         );
 
         return data;
@@ -215,6 +273,7 @@ export const coinRouter = createTRPCRouter({
           sparkline: "false",
         },
         z.array(coinSchema),
+        CACHE_DURATION.TOP_100,
       );
 
       return {
