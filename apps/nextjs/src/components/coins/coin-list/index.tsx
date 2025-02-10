@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 
+
+
 import { Container } from "~/components/layout/container";
 import { ErrorMessage } from "~/components/ui/error-message";
 import { usePagination } from "~/hooks/use-pagination";
@@ -9,6 +11,7 @@ import { api } from "~/trpc/react";
 import { SkeletonCoinList } from "../skeleton-coin-list";
 import { CoinItem } from "./coin-item";
 import { Pagination } from "./pagination";
+
 
 const ITEMS_PER_PAGE = 10;
 const MAX_PAGES = 10;
@@ -33,7 +36,6 @@ export function CoinList() {
     },
   );
 
-  // Оптимизированная предзагрузка следующей страницы
   const prefetchNextPage = useCallback(
     (nextPage: number) => {
       if (nextPage >= 1 && nextPage <= MAX_PAGES) {
@@ -51,11 +53,9 @@ export function CoinList() {
     [utils],
   );
 
-  // Обработчик изменения страницы с предзагрузкой
   const handlePageChangeWithPrefetch = useCallback(
     (newPage: number) => {
       handlePageChange(newPage);
-      // Предзагружаем следующую страницу с задержкой
       setTimeout(() => {
         prefetchNextPage(newPage + 1);
       }, 100);

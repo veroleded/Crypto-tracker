@@ -12,19 +12,11 @@ interface FavoriteButtonProps {
   onRemove?: () => void;
 }
 
-interface MutationContext {
-  isFavorite: boolean;
-  favorites: {
-    favorites: { coinId: string }[];
-  };
-}
-
 export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
   const utils = api.useUtils();
 
-  // Получаем все избранные монеты одним запросом
   const { data: favoritesData } = api.favorite.getAll.useQuery(undefined, {
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchInterval: 2 * 60 * 1000,
     retry: 2,
@@ -34,7 +26,6 @@ export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
     refetchOnMount: false,
   });
 
-  // Проверяем статус избранного локально
   const isFavorite = useMemo(() => {
     if (!favoritesData) return false;
     return favoritesData.favorites.some((f) => f.coinId === coinId);
