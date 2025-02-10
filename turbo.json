@@ -50,10 +50,13 @@
     "DISCORD_CLIENT_ID",
     "DISCORD_CLIENT_SECRET",
     "NEXT_PUBLIC_COINGECKO_API_BASE_URL",
-    "COINGECKO_API_KEY"
+    "COINGECKO_API_KEY",
+    "UPSTASH_REDIS_URL",
+    "UPSTASH_REDIS_TOKEN"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
+
     "CI",
     "VERCEL",
     "VERCEL_ENV",
