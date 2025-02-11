@@ -6,13 +6,11 @@ import { Favorite } from "@acme/db/schema";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const favoriteRouter = createTRPCRouter({
-  // Добавить монету в избранное
   add: protectedProcedure
     .input(z.object({ coinId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Добавляем монету в избранное, игнорируя дубликаты
       return ctx.db
         .insert(Favorite)
         .values({
@@ -24,7 +22,6 @@ export const favoriteRouter = createTRPCRouter({
         });
     }),
 
-  // Удалить монету из избранного
   remove: protectedProcedure
     .input(z.object({ coinId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -37,7 +34,6 @@ export const favoriteRouter = createTRPCRouter({
         );
     }),
 
-  // Получить все избранные монеты пользователя
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
 
@@ -54,7 +50,6 @@ export const favoriteRouter = createTRPCRouter({
     };
   }),
 
-  // Проверить, находится ли монета в избранном
   isFavorite: protectedProcedure
     .input(z.object({ coinId: z.string() }))
     .query(async ({ ctx, input }) => {

@@ -1,5 +1,3 @@
-import { notFound } from "next/navigation";
-
 import { CoinDetails } from "~/components/coins/coin-details";
 import { ErrorMessage } from "~/components/ui/error-message";
 import { api } from "~/trpc/server";
@@ -14,9 +12,6 @@ export default async function CoinPage({ params }: Props) {
   try {
     const coin = await api.coin.getDetailsById(params.id);
 
-    if (!coin) {
-      notFound();
-    }
 
     return (
       <div className="mt-16 flex flex-col gap-6 p-4">

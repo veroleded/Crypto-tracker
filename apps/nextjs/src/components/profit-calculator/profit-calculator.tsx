@@ -1,9 +1,9 @@
-import type { Purchase } from "./types";
 import { api } from "~/trpc/react";
 import { ProfitSummary } from "./profit-summary";
 import { PurchaseForm } from "./purchase-form";
 import { PurchaseList } from "./purchase-list";
 import { ProfitCalculatorSkeleton } from "./skeleton";
+import type { Purchase } from "./types";
 
 interface ProfitCalculatorProps {
   coinId: string;
@@ -18,28 +18,16 @@ export function ProfitCalculator({
 }: ProfitCalculatorProps) {
   const utils = api.useUtils();
 
-  // Fetch purchases from the database
   const { data: purchases, isLoading } = api.purchase.getByCoinId.useQuery({
     coinId,
   });
 
-  // Create purchase mutation
   const { mutate: createPurchase, status } = api.purchase.create.useMutation({
     onSuccess: () => {
-      // Refresh purchases list
       void utils.purchase.getByCoinId.invalidate({ coinId });
     },
   });
 
-  // Delete purchase mutation
-  const { mutate: deletePurchase } = api.purchase.delete.useMutation({
-    onSuccess: () => {
-      // Refresh purchases list
-      void utils.purchase.getByCoinId.invalidate({ coinId });
-    },
-  });
-
-  // Calculate total results
   const calculateTotals = () => {
     if (!purchases?.length) return null;
 
@@ -90,7 +78,7 @@ export function ProfitCalculator({
         <PurchaseList
           purchases={purchases}
           coinName={coinName}
-          onDelete={(id) => deletePurchase({ id })}
+          coinId={coinId}
         />
       )}
 

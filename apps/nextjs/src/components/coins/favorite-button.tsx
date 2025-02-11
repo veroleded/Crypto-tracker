@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import { Heart, Loader2 } from "lucide-react";
+import { useCallback, useMemo } from "react";
 
 import { Button } from "@acme/ui/button";
 
@@ -12,85 +12,64 @@ interface FavoriteButtonProps {
   onRemove?: () => void;
 }
 
-interface MutationContext {
-  isFavorite: boolean;
-  favorites: {
-    favorites: { coinId: string }[];
-  };
-}
-
 export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
   const utils = api.useUtils();
 
-  // Получаем все избранные монеты одним запросом
-  const { data: favoritesData } = api.favorite.getAll.useQuery(undefined, {
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    refetchInterval: 2 * 60 * 1000,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: false,
-  });
-
-  // Проверяем статус избранного локально
-  const isFavorite = useMemo(() => {
-    if (!favoritesData) return false;
-    return favoritesData.favorites.some((f) => f.coinId === coinId);
-  }, [favoritesData, coinId]);
+  const { data: isFavorite, isLoading: isCheckingStatus } = api.favorite.isFavorite.useQuery(
+    { coinId },
+    {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchInterval: 2 * 60 * 1000,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+    }
+  );
 
   const handleMutationStart = useCallback(async () => {
-    await utils.favorite.getAll.cancel();
+    await utils.favorite.isFavorite.cancel({ coinId });
     await utils.coin.getByIds.cancel();
 
-    const prevData = {
-      favorites: utils.favorite.getAll.getData() ?? { favorites: [] },
-    };
+    const prevData = utils.favorite.isFavorite.getData({ coinId });
 
-    return prevData;
-  }, [utils]);
+    return { prevData };
+  }, [utils, coinId]);
 
   const handleMutationError = useCallback(
-    (
-      context: { favorites: { favorites: { coinId: string }[] } } | undefined,
-    ) => {
-      if (context) {
-        utils.favorite.getAll.setData(undefined, context.favorites);
+    (context: { prevData: boolean | undefined; }) => {
+      if (context.prevData !== undefined) {
+        utils.favorite.isFavorite.setData({ coinId }, context.prevData);
       }
     },
-    [utils],
+    [utils, coinId],
   );
 
   const handleMutationSettled = useCallback(() => {
-    void utils.favorite.getAll.invalidate();
+    void utils.favorite.isFavorite.invalidate({ coinId });
     void utils.coin.getByIds.invalidate();
-  }, [utils]);
+  }, [utils, coinId]);
 
   const addMutation = api.favorite.add.useMutation({
     onMutate: async () => {
       const prevData = await handleMutationStart();
-      utils.favorite.getAll.setData(undefined, {
-        favorites: [...prevData.favorites.favorites, { coinId }],
-      });
+      utils.favorite.isFavorite.setData({ coinId }, true);
       return prevData;
     },
-    onError: (_, __, context) => handleMutationError(context),
+    onError: (_, __, context) => handleMutationError(context ?? { prevData: undefined }),
     onSettled: handleMutationSettled,
   });
 
   const removeMutation = api.favorite.remove.useMutation({
     onMutate: async () => {
       const prevData = await handleMutationStart();
-      utils.favorite.getAll.setData(undefined, {
-        favorites: prevData.favorites.favorites.filter(
-          (f) => f.coinId !== coinId,
-        ),
-      });
+      utils.favorite.isFavorite.setData({ coinId }, false);
       onRemove?.();
       return prevData;
     },
-    onError: (_, __, context) => handleMutationError(context),
+    onError: (_, __, context) => handleMutationError(context ?? { prevData: undefined }),
     onSettled: handleMutationSettled,
   });
 
@@ -113,7 +92,7 @@ export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
   );
 
   const buttonContent = useMemo(() => {
-    if (isLoading) {
+    if (isLoading || isCheckingStatus) {
       return <Loader2 className="h-4 w-4 animate-spin" />;
     }
 
@@ -122,14 +101,14 @@ export function FavoriteButton({ coinId, onRemove }: FavoriteButtonProps) {
         className={`h-4 w-4 ${isFavorite ? "fill-current text-red-500" : ""}`}
       />
     );
-  }, [isLoading, isFavorite]);
+  }, [isLoading, isCheckingStatus, isFavorite]);
 
   const buttonLabel = useMemo(
     () => (isFavorite ? "Remove from favorites" : "Add to favorites"),
     [isFavorite],
   );
 
-  if (!favoritesData) {
+  if (isCheckingStatus) {
     return <Loader2 className="h-4 w-4 animate-spin" />;
   }
 

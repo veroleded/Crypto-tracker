@@ -1,56 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
+import { fetchFromApi } from "../lib/coingecko-client";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
-const COINGECKO_URL = "https://api.coingecko.com/api/v3";
-
-const COINGECKO_HEADERS = {
-  "Content-Type": "application/json",
-  Accept: "application/json",
-};
-
-async function fetchFromApi<T>(
-  path: string,
-  params: Record<string, string | number>,
-  schema: z.ZodType<T>,
-): Promise<T> {
-  const queryParams = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    queryParams.append(key, String(value));
-  }
-
-  const response = await fetch(`${COINGECKO_URL}${path}?${queryParams}`, {
-    headers: COINGECKO_HEADERS,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("CoinGecko API Error:", {
-      status: response.status,
-      statusText: response.statusText,
-      errorText,
-    });
-
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: `Failed to fetch: ${response.status} - ${errorText}`,
-    });
-  }
-
-  const rawData = await response.json();
-  const validatedData = schema.safeParse(rawData);
-
-  if (!validatedData.success) {
-    console.error("Validation error:", validatedData.error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Invalid data format from API",
-    });
-  }
-
-  return validatedData.data;
-}
 
 const coinSchema = z.object({
   id: z.string(),
@@ -152,22 +104,46 @@ export const coinRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const coins = await fetchFromApi(
-        "/coins/markets",
-        {
-          vs_currency: "usd",
-          order: "market_cap_desc",
-          per_page: input.perPage,
-          page: input.page,
-          sparkline: "false",
-        },
-        z.array(coinSchema),
-      );
+      const requestId = `${input.page}-${input.perPage}`;
+      console.log("[CoinGecko] Processing request:", {
+        id: requestId,
+        page: input.page,
+        perPage: input.perPage,
+        timestamp: new Date().toISOString(),
+      });
 
-      return {
-        coins,
-        totalCoins: 100, // CoinGecko API limit
-      };
+
+
+      try {
+        const coins = await fetchFromApi(
+          "/coins/markets",
+          {
+            vs_currency: "usd",
+            order: "market_cap_desc",
+            per_page: input.perPage,
+            page: input.page,
+            sparkline: "false",
+          },
+          z.array(coinSchema),
+        );
+
+        console.log("[CoinGecko] Request completed:", {
+          id: requestId,
+          timestamp: new Date().toISOString(),
+        });
+
+        return {
+          coins,
+          totalCoins: 100,
+        };
+      } catch (error) {
+        console.error("[CoinGecko] Error in request:", {
+          id: requestId,
+          error,
+          timestamp: new Date().toISOString(),
+        });
+        throw error;
+      }
     }),
 
   getDetailsById: publicProcedure

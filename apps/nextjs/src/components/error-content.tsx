@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 const errorMessages: Record<string, string> = {
   invalid_code: "Invalid authorization code",
@@ -9,7 +9,6 @@ const errorMessages: Record<string, string> = {
   invalid_credentials: "Invalid email or password",
   "Token has expired or is invalid":
     "Verification link has expired or already been used",
-  // Add more error messages as needed
 };
 
 export function ErrorContent() {
