@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { analyzeNewsData, analyzePriceData } from "../lib/ai-client";
 import { fetchFromApi } from "../lib/coingecko-client";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -45,10 +46,10 @@ const coinDetailsSchema = z
       low_24h: z.object({
         usd: z.number(),
       }),
-      price_change_percentage_24h: z.number(),
-      price_change_percentage_7d: z.number(),
-      price_change_percentage_30d: z.number(),
-      price_change_percentage_1y: z.number(),
+      price_change_percentage_24h: z.number().optional(),
+      price_change_percentage_7d: z.number().optional(),
+      price_change_percentage_30d: z.number().optional(),
+      price_change_percentage_1y: z.number().optional(),
       circulating_supply: z.number(),
       total_supply: z.number().nullable(),
       max_supply: z.number().nullable(),
@@ -81,14 +82,16 @@ const coinDetailsSchema = z
         twitter_followers: z.number().nullable(),
         reddit_subscribers: z.number().nullable(),
       })
-      .nullable(),
+      .nullable()
+      .optional(),
     developer_data: z
       .object({
         forks: z.number().nullable(),
         stars: z.number().nullable(),
         subscribers: z.number().nullable(),
       })
-      .nullable(),
+      .nullable()
+      .optional(),
   })
   .passthrough();
 
@@ -111,8 +114,6 @@ export const coinRouter = createTRPCRouter({
         perPage: input.perPage,
         timestamp: new Date().toISOString(),
       });
-
-
 
       try {
         const coins = await fetchFromApi(
@@ -194,5 +195,95 @@ export const coinRouter = createTRPCRouter({
       return {
         coins,
       };
+    }),
+
+  getAIAnalysis: publicProcedure
+    .input(
+      z.object({
+        coinId: z.string(),
+        timeframe: z.enum(["24h", "7d", "30d"]).default("24h"),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const [historicalData, coinDetails] = await Promise.all([
+          fetchFromApi(
+            `/coins/${input.coinId}/market_chart`,
+            {
+              vs_currency: "usd",
+              days: input.timeframe === "24h" ? "1" : input.timeframe === "7d" ? "7" : "30",
+            },
+            z.object({
+              prices: z.array(z.tuple([z.number(), z.number()])),
+              market_caps: z.array(z.tuple([z.number(), z.number()])),
+              total_volumes: z.array(z.tuple([z.number(), z.number()])),
+            }),
+          ),
+          fetchFromApi(
+            `/coins/${input.coinId}`,
+            {
+              localization: "false",
+              tickers: "false",
+              market_data: "false",
+              community_data: "false",
+              developer_data: "false",
+              sparkline: "false",
+            },
+            z.object({
+              description: z.object({
+                en: z.string(),
+              }),
+            }),
+          ),
+        ]);
+
+        const [priceAnalysis, newsAnalysis] = await Promise.all([
+          analyzePriceData({
+            prices: historicalData.prices,
+            marketCap: historicalData.market_caps,
+            volume: historicalData.total_volumes,
+            timeframe: input.timeframe,
+          }),
+          analyzeNewsData([
+            {
+              description: coinDetails.description.en,
+              category: "general",
+              created_at: new Date().toISOString(),
+            },
+          ]),
+        ]);
+
+        return {
+          priceAnalysis,
+          newsAnalysis,
+        };
+      } catch (error) {
+        console.error("Error in AI analysis:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to perform AI analysis",
+        });
+      }
+    }),
+
+  getPriceHistory: publicProcedure
+    .input(
+      z.object({
+        coinId: z.string(),
+        timeframe: z.enum(["24h", "7d", "30d"]).default("7d"),
+      }),
+    )
+    .query(async ({ input }) => {
+      const days = input.timeframe === "24h" ? 1 : input.timeframe === "7d" ? 7 : 30;
+      return await fetchFromApi(
+        `/coins/${input.coinId}/market_chart`,
+        {
+          vs_currency: "usd",
+          days: days.toString(),
+        },
+        z.object({
+          prices: z.array(z.tuple([z.number(), z.number()])),
+        }),
+      );
     }),
 });
