@@ -7,7 +7,6 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");
 }
 
-// Создаем пул соединений с правильными параметрами для Supabase
 const pool = createPool({
   connectionString:
     process.env.DATABASE_URL + "?workaround=supabase-pooler.vercel",

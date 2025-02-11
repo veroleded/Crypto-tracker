@@ -6,7 +6,7 @@ const COINGECKO_URL = "https://api.coingecko.com/api/v3";
 const CACHE_TTL = 60;
 const RATE_LIMIT = 30;
 const RATE_LIMIT_KEY = "coingecko:rate_limit";
-const RATE_LIMIT_WINDOW = 60; // 1 minute in seconds
+const RATE_LIMIT_WINDOW = 60;
 
 if (!process.env.COINGECKO_API_KEY) {
   throw new Error("COINGECKO_API_KEY is not set");
@@ -28,7 +28,7 @@ async function checkRateLimit(): Promise<boolean> {
   const ttl = await redis.ttl(RATE_LIMIT_KEY);
   const isLimitExceeded = currentRequests > RATE_LIMIT;
 
-  // Логируем только когда осталось мало запросов или лимит превышен
+
   if (isLimitExceeded || (RATE_LIMIT - currentRequests) < 5) {
     console.warn("[API] Rate limit status:", {
       remaining: RATE_LIMIT - currentRequests,
@@ -77,14 +77,13 @@ export async function fetchFromApi<T>(
 
   const cacheKey = `coingecko:${path}:${queryParams.toString()}`;
 
-  // Пытаемся получить данные из кэша
+
   const cachedData = await getFromCache(cacheKey, schema);
   if (cachedData) return cachedData;
 
-  // Проверяем лимит запросов
+
   const canMakeRequest = await checkRateLimit();
   if (!canMakeRequest) {
-    // Пробуем получить данные из кэша еще раз
     const fallbackData = await getFromCache(cacheKey, schema);
     if (fallbackData) return fallbackData;
 
@@ -138,7 +137,6 @@ export async function fetchFromApi<T>(
       });
     }
 
-    // Кэшируем валидные данные
     await setCache(cacheKey, validatedData.data);
     return validatedData.data;
   } catch (error) {

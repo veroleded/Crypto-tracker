@@ -1,8 +1,10 @@
-import { Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { useCallback } from "react";
 import type { ZodTypeDef } from "zod";
 import { z } from "zod";
 
 import { Button } from "@acme/ui/button";
+import { Calendar } from "@acme/ui/calendar";
 import {
   Form,
   FormControl,
@@ -13,9 +15,11 @@ import {
   useForm,
 } from "@acme/ui/form";
 import { Input } from "@acme/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
+import { cn } from "@acme/ui/utils";
 
-const MAX_DATE = "9999-12-31";
-const MIN_DATE = "2009-01-03";
+const MAX_DATE = new Date();
+const MIN_DATE = new Date("2009-01-03");
 
 const formSchema = z.object({
   amount: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
@@ -24,12 +28,7 @@ const formSchema = z.object({
   purchasePrice: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
     message: "Price must be a positive number",
   }),
-  purchaseDate: z.string().refine((val) => {
-    const date = new Date(val);
-    return date >= new Date(MIN_DATE) && date <= new Date(MAX_DATE);
-  }, {
-    message: `Date must be between ${MIN_DATE} and ${MAX_DATE}`,
-  }),
+  purchaseDate: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,17 +48,17 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
     defaultValues: {
       amount: "",
       purchasePrice: "",
-      purchaseDate: "",
+      purchaseDate: new Date().toISOString().split('T')[0],
     },
   });
 
-  const handleSubmit = (values: FormValues) => {
+  const handleSubmit = useCallback((values: FormValues) => {
     onSubmit({
       amount: parseFloat(values.amount),
       purchasePrice: parseFloat(values.purchasePrice),
       purchaseDate: values.purchaseDate,
     });
-  };
+  }, [onSubmit]);
 
   return (
     <Form {...form}>
@@ -108,17 +107,49 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
           control={form.control}
           name="purchaseDate"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Purchase Date</FormLabel>
-              <FormControl>
-                <Input
-                  type="date"
-                  min={MIN_DATE}
-                  max={MAX_DATE}
-                  {...field}
-                  className="border-gray-600 bg-gray-700 text-white"
-                />
-              </FormControl>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full border-gray-600 bg-gray-700 pl-3 text-left font-normal text-white",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        new Date(field.value).toLocaleDateString()
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        field.onChange(`${year}-${month}-${day}`);
+                      }
+                    }}
+                    disabled={(date) =>
+                      date > MAX_DATE || date < MIN_DATE
+                    }
+                    initialFocus
+                    classNames={{
+                      day_selected: "bg-blue-600 hover:bg-blue-700 focus:bg-blue-600",
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
