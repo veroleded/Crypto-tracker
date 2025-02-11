@@ -1,17 +1,16 @@
+import { createServerClient } from "@supabase/ssr";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
   try {
     // Create a response object to modify
-    const response = NextResponse.next({
+    let response = NextResponse.next({
       request: {
         headers: request.headers,
       },
     });
 
-    // Create supabase server client
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,25 +20,30 @@ export async function middleware(request: NextRequest) {
             return request.cookies.get(name)?.value;
           },
           set(name, value, options) {
+            // If we're setting a cookie, update the response with it
             request.cookies.set({ name, value, ...options });
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
             response.cookies.set({ name, value, ...options });
           },
           remove(name, options) {
-            request.cookies.set({ name, value: "", ...options });
-            response.cookies.set({ name, value: "", ...options });
+            request.cookies.delete(name);
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
+            response.cookies.delete(name);
           },
         },
-      },
+      }
     );
 
-    // Refresh session if expired
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-    if (sessionError) {
-      throw sessionError;
-    }
+    // Refresh session if expired - this will update cookies
+    await supabase.auth.getSession();
 
     // Get URL information
     const url = new URL(request.url);
@@ -52,6 +56,11 @@ export async function middleware(request: NextRequest) {
       url.pathname.startsWith("/_next") ||
       url.pathname.startsWith("/static") ||
       url.pathname.startsWith("/api/trpc");
+
+    // Get user session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     // Handle authentication routing
     if (session) {
@@ -77,14 +86,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
