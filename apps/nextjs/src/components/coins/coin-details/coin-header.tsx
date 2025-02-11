@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 import type { CoinDetails } from "@acme/api";
 import { Button } from "@acme/ui/button";
@@ -13,6 +13,8 @@ interface Props {
 }
 
 export function CoinHeader({ coin }: Props) {
+  const router = useRouter();
+
   const coinInfo = useMemo(
     () => ({
       name: coin.name,
@@ -28,12 +30,12 @@ export function CoinHeader({ coin }: Props) {
         <Button
           variant="ghost"
           className="p-0"
-          asChild
-          aria-label="Back to home page"
+          onClick={() => router.back()}
+          aria-label="Go back to previous page"
         >
-          <Link href="/" className="flex h-10 w-10 items-center justify-center">
+          <div className="flex h-10 w-10 items-center justify-center">
             <ChevronLeft className="h-6 w-6" />
-          </Link>
+          </div>
         </Button>
 
         <Image

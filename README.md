@@ -26,7 +26,7 @@
 
 - **Backend:**
   - Supabase (База данных и аутентификация)
-  - CoinGecko API (Данные о криптовалютах)
+  - CoinGecko API Pro (Данные о криптовалютах)
   - Upstash Redis (Кэширование и управление лимитами запросов)
 
 - **Инфраструктура:**
@@ -42,6 +42,7 @@
 - pnpm 9.15.4 или выше
 - Аккаунт Supabase
 - Аккаунт Upstash
+- API ключ CoinGecko
 
 ### Установка
 
@@ -69,6 +70,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 DATABASE_URL=your-database-url
 UPSTASH_REDIS_URL=your-upstash-redis-url
 UPSTASH_REDIS_TOKEN=your-upstash-redis-token
+COINGECKO_API_KEY=your-coingecko-api-key
 ```
 
 5. Запустите проект в режиме разработки:
@@ -130,6 +132,4 @@ pnpm dev
 - Автоматическое управление лимитами API (30 запросов в минуту)
 - Fallback на кэшированные данные при превышении лимитов
 - Оптимизированная пагинация с локальным кэшированием
-
-
 

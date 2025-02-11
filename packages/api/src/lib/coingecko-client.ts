@@ -8,9 +8,14 @@ const RATE_LIMIT = 30;
 const RATE_LIMIT_KEY = "coingecko:rate_limit";
 const RATE_LIMIT_WINDOW = 60; // 1 minute in seconds
 
+if (!process.env.COINGECKO_API_KEY) {
+  throw new Error("COINGECKO_API_KEY is not set");
+}
+
 const COINGECKO_HEADERS: Record<string, string> = {
   "Content-Type": "application/json",
   Accept: "application/json",
+  "x-cg-demo-api-key": process.env.COINGECKO_API_KEY
 };
 
 async function checkRateLimit(): Promise<boolean> {
@@ -20,7 +25,18 @@ async function checkRateLimit(): Promise<boolean> {
     await redis.expire(RATE_LIMIT_KEY, RATE_LIMIT_WINDOW);
   }
 
-  return currentRequests <= RATE_LIMIT;
+  const ttl = await redis.ttl(RATE_LIMIT_KEY);
+  const isLimitExceeded = currentRequests > RATE_LIMIT;
+
+  // Логируем только когда осталось мало запросов или лимит превышен
+  if (isLimitExceeded || (RATE_LIMIT - currentRequests) < 5) {
+    console.warn("[API] Rate limit status:", {
+      remaining: RATE_LIMIT - currentRequests,
+      resetIn: `${ttl}s`,
+    });
+  }
+
+  return !isLimitExceeded;
 }
 
 async function getFromCache<T>(
@@ -32,15 +48,9 @@ async function getFromCache<T>(
     if (!cachedData) return null;
 
     const validatedCache = schema.safeParse(cachedData);
-
-    if (validatedCache.success) {
-      return validatedCache.data;
-    }
-
-    console.error("Cache validation error:", validatedCache.error);
-    return null;
+    return validatedCache.success ? validatedCache.data : null;
   } catch (error) {
-    console.error("Cache error:", error);
+    console.error("[Cache] Error:", error);
     return null;
   }
 }
@@ -51,7 +61,7 @@ async function setCache<T>(cacheKey: string, data: T): Promise<void> {
       ex: CACHE_TTL
     });
   } catch (error) {
-    console.error("Cache set error:", error);
+    console.error("[Cache] Error:", error);
   }
 }
 
@@ -66,24 +76,17 @@ export async function fetchFromApi<T>(
   }
 
   const cacheKey = `coingecko:${path}:${queryParams.toString()}`;
-  console.log("cacheKey", cacheKey);
 
-  // Сначала пытаемся получить данные из кэша
+  // Пытаемся получить данные из кэша
   const cachedData = await getFromCache(cacheKey, schema);
-  if (cachedData) {
-    console.log("[CoinGecko] Using cached data for:", cacheKey);
-    return cachedData;
-  }
+  if (cachedData) return cachedData;
 
   // Проверяем лимит запросов
   const canMakeRequest = await checkRateLimit();
   if (!canMakeRequest) {
-    // Пробуем получить данные из кэша еще раз (возможно, другой запрос уже обновил кэш)
+    // Пробуем получить данные из кэша еще раз
     const fallbackData = await getFromCache(cacheKey, schema);
-    if (fallbackData) {
-      console.warn("[CoinGecko] Rate limit exceeded, using cached data for:", cacheKey);
-      return fallbackData;
-    }
+    if (fallbackData) return fallbackData;
 
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
@@ -98,19 +101,20 @@ export async function fetchFromApi<T>(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("[CoinGecko] API Error:", {
-        status: response.status,
-        statusText: response.statusText,
-        errorText,
-        path,
-      });
 
       if (response.status === 429) {
+        const retryAfter = response.headers.get("retry-after");
+        const rateLimit = response.headers.get("x-ratelimit-limit");
+        const rateLimitRemaining = response.headers.get("x-ratelimit-remaining");
+
+        console.warn("[API] CoinGecko rate limit:", {
+          limit: rateLimit,
+          remaining: rateLimitRemaining,
+          retryAfter: retryAfter ? `${retryAfter}s` : 'unknown'
+        });
+
         const fallbackData = await getFromCache(cacheKey, schema);
-        if (fallbackData) {
-          console.warn("[CoinGecko] Rate limit exceeded, using cached data for:", cacheKey);
-          return fallbackData;
-        }
+        if (fallbackData) return fallbackData;
 
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
@@ -128,7 +132,6 @@ export async function fetchFromApi<T>(
     const validatedData = schema.safeParse(rawData);
 
     if (!validatedData.success) {
-      console.error("[CoinGecko] Validation error:", validatedData.error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Invalid data format from API",
@@ -137,16 +140,16 @@ export async function fetchFromApi<T>(
 
     // Кэшируем валидные данные
     await setCache(cacheKey, validatedData.data);
-    console.log("[CoinGecko] Successfully cached data for:", cacheKey);
-
     return validatedData.data;
   } catch (error) {
     if (error instanceof TRPCError) throw error;
 
-    console.error("[CoinGecko] Fetch error:", error);
+    console.error("[API] Error:", error);
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to fetch data from CoinGecko API",
     });
   }
 }
+
+
