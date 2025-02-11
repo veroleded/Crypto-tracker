@@ -1,6 +1,6 @@
+import { Loader2 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
 
@@ -102,7 +102,7 @@ export function PurchaseForm({ onSubmit, isSubmitting }: PurchaseFormProps) {
           type="date"
           value={purchaseDate}
           onChange={(e) => setPurchaseDate(e.target.value)}
-          className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 [&::-webkit-calendar-picker-indicator]:bg-white [&::-webkit-datetime-edit]:p-0 [&::-webkit-date-and-time-value]:text-white"
           min={MIN_DATE}
           max={MAX_DATE}
           required
