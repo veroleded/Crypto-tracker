@@ -88,7 +88,6 @@ export class AIService {
     };
   }) {
     try {
-      // Пробуем получить анализ из кэша
       const cachedAnalysis = await CacheService.getAIAnalysis(
         params.coinId,
         params.timeframe,
