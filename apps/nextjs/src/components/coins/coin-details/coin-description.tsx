@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { CoinDetails } from "@acme/api/";
+import type { CoinDetails } from "@acme/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
 import { cn } from "@acme/ui/utils";
 

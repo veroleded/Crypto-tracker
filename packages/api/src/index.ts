@@ -1,8 +1,9 @@
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 import type { AppRouter } from "./root";
-import type { Coin, CoinDetails } from "./router/coin";
 import { appRouter } from "./root";
+import type { NewsAnalysis, PriceAnalysis } from "./schemas/ai";
+import type { Coin, CoinDetails, MarketChart } from "./schemas/coin";
 import { createCallerFactory, createTRPCContext } from "./trpc";
 
 /**
@@ -31,4 +32,5 @@ type RouterInputs = inferRouterInputs<AppRouter>;
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export { appRouter, createCaller, createTRPCContext };
-export type { AppRouter, Coin, CoinDetails, RouterInputs, RouterOutputs };
+export type { AppRouter, Coin, CoinDetails, MarketChart, NewsAnalysis, PriceAnalysis, RouterInputs, RouterOutputs };
+
