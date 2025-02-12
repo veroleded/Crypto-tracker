@@ -42,7 +42,21 @@ export function CoinDetails({ coin }: Props) {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <CoinHeader coin={coin} />
-        <CoinAIAnalysis coinId={coin.id} />
+        <CoinAIAnalysis
+          coinId={coin.id}
+          description={coin.description?.en ?? "No description available"}
+          name={coin.name}
+          symbol={coin.symbol}
+          market_cap_rank={coin.market_data.market_cap_rank}
+          market_data={{
+            current_price: { usd: coin.market_data.current_price.usd },
+            market_cap: { usd: coin.market_data.market_cap.usd },
+            total_volume: { usd: coin.market_data.total_volume.usd },
+            price_change_percentage_24h: coin.market_data.price_change_percentage_24h,
+            price_change_percentage_7d: coin.market_data.price_change_percentage_7d,
+            price_change_percentage_30d: coin.market_data.price_change_percentage_30d,
+          }}
+        />
       </div>
       <Separator />
       <CoinPriceChart coinId={coin.id} />

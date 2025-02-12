@@ -194,7 +194,7 @@ export function CoinPriceChart({ coinId }: CoinPriceChartProps) {
                 tick={{ fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => formatPrice(value)}
+                tickFormatter={(value) => formatPrice(value as number)}
                 width={80}
                 domain={['auto', 'auto']}
               />

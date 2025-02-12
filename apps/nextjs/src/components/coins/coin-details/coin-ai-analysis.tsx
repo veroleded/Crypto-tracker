@@ -29,7 +29,7 @@ import {
 import { Separator } from "@acme/ui/separator";
 import { cn } from "@acme/ui/utils";
 
-import type { NewsAnalysis, PriceAnalysis } from "@acme/api";
+import type { NewsAnalysis, PriceAnalysis, RouterInputs } from "@acme/api";
 import { api } from "~/trpc/react";
 
 interface AIAnalysisData {
@@ -39,14 +39,43 @@ interface AIAnalysisData {
 
 interface CoinAIAnalysisProps {
   coinId: string;
+  description: string;
+  name: string;
+  symbol: string;
+  market_cap_rank: number;
+  market_data: {
+    current_price: { usd: number; };
+    market_cap: { usd: number; };
+    total_volume: { usd: number; };
+    price_change_percentage_24h?: number;
+    price_change_percentage_7d?: number;
+    price_change_percentage_30d?: number;
+  };
 }
 
-export function CoinAIAnalysis({ coinId }: CoinAIAnalysisProps) {
+export function CoinAIAnalysis({
+  coinId,
+  description,
+  name,
+  symbol,
+  market_cap_rank,
+  market_data,
+}: CoinAIAnalysisProps) {
   const [timeframe, setTimeframe] = useState<"24h" | "7d" | "30d">("24h");
   const [isOpen, setIsOpen] = useState(false);
 
   const { data, isLoading } = api.coin.getAIAnalysis.useQuery(
-    { coinId, timeframe },
+    {
+      coinId,
+      timeframe,
+      coinDetails: {
+        description,
+        name,
+        symbol,
+        market_cap_rank,
+        market_data,
+      }
+    } as RouterInputs["coin"]["getAIAnalysis"],
     {
       enabled: isOpen,
       refetchOnWindowFocus: false,
